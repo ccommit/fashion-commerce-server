@@ -73,3 +73,10 @@ https://ovenapp.io/view/fGQCAoA4y8tBMSce9LzDsoBdZJoOjoKU/ROoSh
 
 ## ERD(Entity Relationship Diagram)
 ![FashionProject_Table_ERD 20230722_020240](https://github.com/ccommit/fashion-commerce-server/assets/44775069/5a88df93-615b-4f64-99b4-78d97355b8c9)
+
+
+## 시퀀스 다이어그램
+![주문하기 (2)](https://github.com/ccommit/fashion-commerce-server/assets/44775069/4fac30da-8ca7-4efc-a7ea-e07ddbb0ed71)
+![취소_환불하기 (1)](https://github.com/ccommit/fashion-commerce-server/assets/44775069/516c0110-d82e-49e7-8b4d-0ebc73de3458)
+
+

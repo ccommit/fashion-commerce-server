@@ -76,7 +76,16 @@ https://ovenapp.io/view/fGQCAoA4y8tBMSce9LzDsoBdZJoOjoKU/ROoSh
 
 
 ## 시퀀스 다이어그램
+<details>
+    <summary>상품 조회 후 주문하기</summary>
+
 ![주문하기 (2)](https://github.com/ccommit/fashion-commerce-server/assets/44775069/4fac30da-8ca7-4efc-a7ea-e07ddbb0ed71)
+
+</details>
+<details>
+    <summary>취소,환불하기</summary>
+
 ![취소_환불하기 (1)](https://github.com/ccommit/fashion-commerce-server/assets/44775069/516c0110-d82e-49e7-8b4d-0ebc73de3458)
 
+</details>
 

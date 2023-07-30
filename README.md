@@ -79,7 +79,7 @@ https://ovenapp.io/view/fGQCAoA4y8tBMSce9LzDsoBdZJoOjoKU/ROoSh
 <details>
     <summary>상품 조회 후 주문하기</summary>
 
-![주문하기 (2)](https://github.com/ccommit/fashion-commerce-server/assets/44775069/4fac30da-8ca7-4efc-a7ea-e07ddbb0ed71)
+![주문하기](https://github.com/ccommit/fashion-commerce-server/assets/44775069/286ad62f-ba22-4343-bf56-cf30d855a31b)
 
 </details>
 <details>

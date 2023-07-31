@@ -79,13 +79,14 @@ https://ovenapp.io/view/fGQCAoA4y8tBMSce9LzDsoBdZJoOjoKU/ROoSh
 <details>
     <summary>상품 조회 후 주문하기</summary>
 
-![주문하기](https://github.com/ccommit/fashion-commerce-server/assets/44775069/286ad62f-ba22-4343-bf56-cf30d855a31b)
+![주문하기 (1)](https://github.com/ccommit/fashion-commerce-server/assets/44775069/0131f71f-e3f5-412a-b390-e1e6e81ff19d)
 
 </details>
+
 <details>
     <summary>취소,환불하기</summary>
 
-![취소_환불하기 (1)](https://github.com/ccommit/fashion-commerce-server/assets/44775069/516c0110-d82e-49e7-8b4d-0ebc73de3458)
+![취소_환불하기 (1)](https://github.com/ccommit/fashion-commerce-server/assets/44775069/05a243a3-f89f-4244-a480-bd52af0fa41d)
 
 </details>
 

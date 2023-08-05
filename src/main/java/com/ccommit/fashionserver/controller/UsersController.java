@@ -34,13 +34,21 @@ public class UsersController {
     // @RequestMapping(method = RequestMethod.POST, path="")
     // 아래의 @PostMapping("")와 동일. Post일 경우 간결하게 원하면 지금처럼 작성하면 된다.
     //회원가입
-    @PostMapping("")
+    /*@PostMapping("")
     public int signUp(UserDto userDto){
         // postman으로 들어온 값이 null인지 유효성 체크
         // 들어온 값을 받아서 전달
 
         return 0;
-    }
+    }*/
+    @PostMapping("/signUp")
+    public UserDto signUp(UserDto userDto){
+        // postman으로 들어온 값이 null인지 유효성 체크
+        // 들어온 값을 받아서 전달
 
+        UserDto resultDto = userService.signUp(userDto);
+
+        return resultDto;
+    }
 
 }

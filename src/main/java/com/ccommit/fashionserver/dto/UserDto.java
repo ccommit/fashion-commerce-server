@@ -3,6 +3,8 @@ package com.ccommit.fashionserver.dto;
 import jdk.nashorn.internal.objects.annotations.Getter;
 import jdk.nashorn.internal.objects.annotations.Setter;
 
+import java.sql.Date;
+
 /**
  * packageName    : com.ccommit.fashionserver.dto
  * fileName       : UserDto
@@ -29,22 +31,25 @@ import jdk.nashorn.internal.objects.annotations.Setter;
 @Setter*/
 public class UserDto {
 
-    private String id;
+    private int id;
     private String user_id;
     private String address;
     private String password;
     private String phone_number;
-    private String create_date;
-    private String update_date;
-    private String sign_status;
-    private String is_withdraw;
-    private String is_admin;
+    private Date create_date;
+    private Date update_date;
+    private int sign_status;
+    private int is_withdraw;
+    // TINYINT 0은 false, 1은 true 로 해석
+    // mysql TINYINT = java Integer 로 표현
+    private int is_admin;
 
-    public String getId() {
+
+    public int getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(int id) {
         this.id = id;
     }
 
@@ -80,43 +85,43 @@ public class UserDto {
         this.phone_number = phone_number;
     }
 
-    public String getCreate_date() {
+    public Date getCreate_date() {
         return create_date;
     }
 
-    public void setCreate_date(String create_date) {
+    public void setCreate_date(Date create_date) {
         this.create_date = create_date;
     }
 
-    public String getUpdate_date() {
+    public Date getUpdate_date() {
         return update_date;
     }
 
-    public void setUpdate_date(String update_date) {
+    public void setUpdate_date(Date update_date) {
         this.update_date = update_date;
     }
 
-    public String getSign_status() {
+    public int getSign_status() {
         return sign_status;
     }
 
-    public void setSign_status(String sign_status) {
+    public void setSign_status(int sign_status) {
         this.sign_status = sign_status;
     }
 
-    public String getIs_withdraw() {
+    public int getIs_withdraw() {
         return is_withdraw;
     }
 
-    public void setIs_withdraw(String is_withdraw) {
+    public void setIs_withdraw(int is_withdraw) {
         this.is_withdraw = is_withdraw;
     }
 
-    public String getIs_admin() {
+    public int getIs_admin() {
         return is_admin;
     }
 
-    public void setIs_admin(String is_admin) {
+    public void setIs_admin(int is_admin) {
         this.is_admin = is_admin;
     }
 

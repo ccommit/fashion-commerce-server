@@ -31,18 +31,18 @@ import java.sql.Date;
 @Setter*/
 public class UserDto {
 
-    private int id;
-    private String user_id;
-    private String address;
-    private String password;
-    private String phone_number;
-    private Date create_date;
-    private Date update_date;
-    private int sign_status;
-    private int is_withdraw;
+    private int id;                 //번호
+    private String address;         //주소
+    private String password;        //비밀번호
+    private String phone_number;    //휴대폰번호
+    private Date create_date;       //생성날짜
+    private Date update_date;       //수정날짜
+    private int sign_status;        //가입상태
+    private int is_withdraw;        //탈퇴상태
     // TINYINT 0은 false, 1은 true 로 해석
     // mysql TINYINT = java Integer 로 표현
-    private int is_admin;
+    private String user_id;         //아이디
+    private int is_admin;           //관리자여부
 
 
     public int getId() {
@@ -51,14 +51,6 @@ public class UserDto {
 
     public void setId(int id) {
         this.id = id;
-    }
-
-    public String getUser_id() {
-        return user_id;
-    }
-
-    public void setUser_id(String user_id) {
-        this.user_id = user_id;
     }
 
     public String getAddress() {
@@ -115,6 +107,14 @@ public class UserDto {
 
     public void setIs_withdraw(int is_withdraw) {
         this.is_withdraw = is_withdraw;
+    }
+
+    public String getUser_id() {
+        return user_id;
+    }
+
+    public void setUser_id(String user_id) {
+        this.user_id = user_id;
     }
 
     public int getIs_admin() {

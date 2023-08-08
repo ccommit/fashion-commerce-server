@@ -16,5 +16,6 @@ import org.apache.ibatis.annotations.Mapper;
  */
 @Mapper
 public interface UserMapper {
-    UserDto register(UserDto userDto);
+    int signUp(UserDto userDto);
+    int idCheck(String user_id);
 }

@@ -4,11 +4,22 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ccommit.fashionserver.mapper.UserMapper">
 
-    <insert id="register">
+    <select id="idCheck" resultType="int">
+        SELECT COUNT(id)
+          FROM users
+         WHERE user_id = #{user_id}
+    </select>
+
+    <insert id="signUp" parameterType="com.ccommit.fashionserver.dto.UserDto">
+        <selectKey keyProperty="id" resultType="int" order="BEFORE">
+            SELECT IFNULL(max(id)+1,1) as id
+            FROM users
+        </selectKey>
         INSERT INTO users (id, address, password, phone_number, update_date, create_date, sign_status
         , is_withdraw, user_id, is_admin)
-        VALUES (#{id}, #{address}, #{password}, #{phone_number}, #{update_date},#{create_date},#{sign_status},
+        VALUES (#{id}, #{address}, #{password}, #{phone_number}, #{update_date}, now(), #{sign_status},
         #{is_withdraw},#{user_id}, #{is_admin})
+
     </insert>
 
 </mapper>

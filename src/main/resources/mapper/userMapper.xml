@@ -8,7 +8,7 @@
     <select id="idCheck" resultType="int">
         SELECT COUNT(id)
           FROM users
-         WHERE user_id = #{user_id}
+         WHERE user_id = #{userId}
     </select>
 
     <!--회원 등록-->
@@ -19,8 +19,8 @@
         </selectKey>
         INSERT INTO users (id, address, password, phone_number, update_date, create_date, sign_status
         , is_withdraw, user_id, is_admin)
-        VALUES (#{id}, #{address}, #{password}, #{phone_number}, #{update_date}, now(), #{sign_status},
-        #{is_withdraw},#{user_id}, #{is_admin})
+        VALUES (#{id}, #{address}, #{password}, #{phoneNumber}, #{updateDate}, now(), #{signStatus},
+        #{isWithdraw},#{userId}, #{isAdmin})
     </insert>
 
     <!--탈퇴 가능한 조건인지 체크-->
@@ -30,7 +30,7 @@
         UPDATE users
            SET update_date = now(),
                is_withdraw = 0
-         WHERE user_id = #{user_id}
+         WHERE user_id = #{userId}
     </update>
 
     <!--회원 수정-->

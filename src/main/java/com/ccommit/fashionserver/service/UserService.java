@@ -38,16 +38,17 @@ public class UserService {
     //회원가입
     public int signUp(UserDto userDto){
         int result = 0;
+        String rexExpPhoneNum = "";
         // 중복회원 유무 체크
-        if (idCheck(userDto.getUser_id())){
+        if (idCheck(userDto.getUserId())){
             System.out.println("중복된 아이디 존재");
             //예외처리
         }else {
             userDto.setPassword(encrypt.hashPassword(userDto.getPassword()));
-            userDto.setPhone_number(userDto.getPhone_number());
-            userDto.setSign_status(1);      //가입상태 {0:미가입, 1:가입}
-            userDto.setIs_admin(10);        //관리자여부 {10:회원, 20:판매자, 30:관리자}
-            userDto.setIs_withdraw(1);     //탈퇴상태 {1:회원, 0:탈퇴}
+            userDto.setPhoneNumber(userDto.getPhoneNumber());
+            userDto.setSignStatus(1);      //가입상태 {0:미가입, 1:가입}
+            userDto.setIsAdmin(10);        //관리자여부 {10:회원, 20:판매자, 30:관리자}
+            userDto.setIsWithdraw(1);     //탈퇴상태 {1:회원, 0:탈퇴}
             result = userMapper.signUp(userDto);
         }
         return result;
@@ -55,9 +56,9 @@ public class UserService {
 
 
     //회원 탈퇴
-    public int userWithdrawal(String user_id){
+    public int userWithdrawal(String userId){
         int result = 0;
-        result = userMapper.userWithdraw(user_id);
+        result = userMapper.userWithdraw(userId);
         return result;
     }
 

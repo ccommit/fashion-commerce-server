@@ -51,9 +51,9 @@ public class UserController {
 
     //회원 탈퇴
     @PostMapping("/userWithdrawal")
-    public int userWithdrawal(String user_id){
+    public int userWithdrawal(String userId){
         // 삭제가 아닌 회원 테이블의 is_withdraw 컬럼을 update한다.
-        int result = userService.userWithdrawal(user_id);
+        int result = userService.userWithdrawal(userId);
 
         return 0;
     }

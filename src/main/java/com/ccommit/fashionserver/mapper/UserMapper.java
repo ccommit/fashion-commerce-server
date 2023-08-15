@@ -18,4 +18,5 @@ import org.apache.ibatis.annotations.Mapper;
 public interface UserMapper {
     int signUp(UserDto userDto);
     int idCheck(String user_id);
+    int userWithdraw(String user_id);
 }

@@ -4,12 +4,14 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ccommit.fashionserver.mapper.UserMapper">
 
+    <!--아이디 존재 유무 체크-->
     <select id="idCheck" resultType="int">
         SELECT COUNT(id)
           FROM users
          WHERE user_id = #{user_id}
     </select>
 
+    <!--회원 등록-->
     <insert id="signUp" parameterType="com.ccommit.fashionserver.dto.UserDto">
         <selectKey keyProperty="id" resultType="int" order="BEFORE">
             SELECT IFNULL(max(id)+1,1) as id
@@ -19,7 +21,19 @@
         , is_withdraw, user_id, is_admin)
         VALUES (#{id}, #{address}, #{password}, #{phone_number}, #{update_date}, now(), #{sign_status},
         #{is_withdraw},#{user_id}, #{is_admin})
-
     </insert>
+
+    <!--탈퇴 가능한 조건인지 체크-->
+    <!--주문일 경우 체크해야하는데 주문쪽 생성하고 수정하기. -->
+    <!--회원 탈퇴-->
+    <update id="userWithdraw" parameterType="String">
+        UPDATE users
+           SET update_date = now(),
+               is_withdraw = 0
+         WHERE user_id = #{user_id}
+    </update>
+
+    <!--회원 수정-->
+
 
 </mapper>

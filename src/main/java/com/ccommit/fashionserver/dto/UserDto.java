@@ -1,8 +1,6 @@
 package com.ccommit.fashionserver.dto;
 
-import jdk.nashorn.internal.objects.annotations.Getter;
-import jdk.nashorn.internal.objects.annotations.Setter;
-
+import javax.validation.constraints.NotBlank;
 import java.sql.Date;
 
 /**
@@ -16,24 +14,14 @@ import java.sql.Date;
  * -----------------------------------------------------------
  * 2023-07-27        juoiy       최초 생성
  */
-/*
- * 번호
- * 아이디
- * 비밀번호
- * 휴대폰번호
- * 생성날짜
- * 수정날짜
- * 가입날짜
- * 탈퇴상태
- * 관리자여부
- */
-/*@Getter
-@Setter*/
-public class UserDto {
 
+public class UserDto {
     private int id;                 //번호
+    @NotBlank
     private String address;         //주소
+    @NotBlank
     private String password;        //비밀번호
+    @NotBlank
     private String phone_number;    //휴대폰번호
     private Date create_date;       //생성날짜
     private Date update_date;       //수정날짜
@@ -41,6 +29,7 @@ public class UserDto {
     private int is_withdraw;        //탈퇴상태
     // TINYINT 0은 false, 1은 true 로 해석
     // mysql TINYINT = java Integer 로 표현
+    @NotBlank
     private String user_id;         //아이디
     private int is_admin;           //관리자여부
 
@@ -125,6 +114,5 @@ public class UserDto {
         this.is_admin = is_admin;
     }
 
-    //회원가입 시 null 유효성 체크
 
 }

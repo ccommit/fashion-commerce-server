@@ -38,7 +38,6 @@ public class UserService {
     //회원가입
     public int signUp(UserDto userDto){
         int result = 0;
-        String rexExpPhoneNum = "";
         // 중복회원 유무 체크
         if (idCheck(userDto.getUserId())){
             System.out.println("중복된 아이디 존재");
@@ -56,7 +55,7 @@ public class UserService {
 
 
     //회원 탈퇴
-    public int userWithdrawal(String userId){
+    public int userWithdraw(String userId){
         int result = 0;
         result = userMapper.userWithdraw(userId);
         return result;

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+import java.util.regex.Pattern;
 
 /**
  * packageName    : com.ccommit.fashionserver.controller
@@ -34,28 +35,34 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    // @RequestMapping(method = RequestMethod.POST, path="")
-    // 아래의 @PostMapping("")와 동일. Post일 경우 간결하게 원하면 지금처럼 작성하면 된다.
+    /** @RequestMapping(method = RequestMethod.POST, path="")
+        아래의 @PostMapping("")와 동일. Post일 경우 간결하게 원하면 지금처럼 작성하면 된다.
+     */
     //회원가입
     @PostMapping("/signUp")
     public int signUp(@Valid UserDto userDto){
         // postman으로 들어온 값이 null인지 유효성 체크
         // 들어온 값을 받아서 전달
-
         int result = 0;
-        result = userService.signUp(userDto);
+        String regexPhoneNum = "^01(?:0|1|[6-9])-(?:\\d{3}|\\d{4})-\\d{4}$";
+        boolean isRegexPhoneNum = Pattern.matches(regexPhoneNum, userDto.getPhoneNumber());
 
-        System.out.println("@@@@@@@@@@@@@result"+ result);
+        if(!isRegexPhoneNum){
+            System.out.println("휴대폰번호를 확인해주세요. (입력 예시:010-1234-1234) ");
+        } else {
+            result = userService.signUp(userDto);
+        }
+
         return result;
     }
 
     //회원 탈퇴
-    @PostMapping("/userWithdrawal")
-    public int userWithdrawal(String userId){
+    @PostMapping("/userWithdraw")
+    public int userWithdraw(@Valid String userId){
         // 삭제가 아닌 회원 테이블의 is_withdraw 컬럼을 update한다.
-        int result = userService.userWithdrawal(userId);
+        int result = userService.userWithdraw(userId);
 
-        return 0;
+        return result;
     }
 
     //회원 수정

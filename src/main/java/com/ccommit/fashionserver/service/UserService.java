@@ -3,12 +3,12 @@ package com.ccommit.fashionserver.service;
 import com.ccommit.fashionserver.dto.UserDto;
 import com.ccommit.fashionserver.mapper.UserMapper;
 import com.ccommit.fashionserver.utils.BcryptEncoder;
-import org.mindrot.jbcrypt.BCrypt;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.sql.Date;
-import java.text.SimpleDateFormat;
+import java.util.regex.Pattern;
+
 
 /**
  * packageName    : com.ccommit.fashionserver.service
@@ -29,20 +29,17 @@ public class UserService {
     @Autowired
     BcryptEncoder encrypt;
 
-
-    // 중복아이디 체크
-    public boolean idCheck(String user_id){
-        return userMapper.idCheck(user_id) == 1;
+    public boolean isIdCheck(String userId) {
+        return userMapper.isIdCheck(userId) == 1;
     }
 
     //회원가입
-    public int signUp(UserDto userDto){
+    public int signUp(UserDto userDto) {
         int result = 0;
         // 중복회원 유무 체크
-        if (idCheck(userDto.getUserId())){
+        if (isIdCheck(userDto.getUserId())) {
             System.out.println("중복된 아이디 존재");
-            //예외처리
-        }else {
+        } else {
             userDto.setPassword(encrypt.hashPassword(userDto.getPassword()));
             userDto.setPhoneNumber(userDto.getPhoneNumber());
             userDto.setSignStatus(1);      //가입상태 {0:미가입, 1:가입}
@@ -53,15 +50,35 @@ public class UserService {
         return result;
     }
 
-
-    //회원 탈퇴
-    public int userWithdraw(String userId){
+    public int userWithdraw(String userId) {
         int result = 0;
         result = userMapper.userWithdraw(userId);
         return result;
     }
 
-    //회원수정
-
-
+    public int userInfoUpdate(UserDto userDto) {
+        int result = 0;
+        String regexPhoneNum = "^01(?:0|1|[6-9])-(?:\\d{3}|\\d{4})-\\d{4}$";
+        boolean isRegexPhoneNum = true;
+        if (!isIdCheck(userDto.getUserId())) {
+            System.out.println("존재하지 않는 회원입니다.");
+        } else {
+            if (!StringUtils.isBlank(userDto.getPassword())) {
+                userDto.setPassword(encrypt.hashPassword(userDto.getPassword()));
+            }
+            if (!StringUtils.isBlank(userDto.getPhoneNumber())) {
+                isRegexPhoneNum = Pattern.matches(regexPhoneNum, userDto.getPhoneNumber());
+                if (!isRegexPhoneNum) {
+                    System.out.println("휴대폰번호를 확인해주세요. (입력 예시:010-1234-1234) ");
+                } else {
+                    userDto.setPhoneNumber(userDto.getPhoneNumber());
+                }
+            }
+            if (!StringUtils.isBlank(userDto.getAddress())) {
+                userDto.setAddress(userDto.getAddress());
+            }
+            result = userMapper.userInfoUpdate(userDto);
+        }
+        return result;
+    }
 }

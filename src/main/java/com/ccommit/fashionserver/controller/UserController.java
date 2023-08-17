@@ -2,9 +2,10 @@ package com.ccommit.fashionserver.controller;
 
 import com.ccommit.fashionserver.dto.UserDto;
 import com.ccommit.fashionserver.service.UserService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,47 +25,50 @@ import java.util.regex.Pattern;
  */
 
 /*
-*   @Controller + @ResponseBody = @RestController
-*   @ResponseBody를 붙여서 JSON을 만들었지만,
-*   @RestController로 쉽게 알아서 전송 가능한 문자열 만들어준다.
-* */
+ *   @Controller + @ResponseBody = @RestController
+ *   @ResponseBody를 붙여서 JSON을 만들었지만,
+ *   @RestController로 쉽게 알아서 전송 가능한 문자열 만들어준다.
+ * */
 @RestController
 @RequestMapping("/user") // 이곳으로 들어오는 api주소를 mapping, /api 주소로 받겠다(localhost:8080/user)
 public class UserController {
-
     @Autowired
     private UserService userService;
 
-    /** @RequestMapping(method = RequestMethod.POST, path="")
-        아래의 @PostMapping("")와 동일. Post일 경우 간결하게 원하면 지금처럼 작성하면 된다.
+    /**
+     * @RequestMapping(method = RequestMethod.POST, path="")
+     * 아래의 @PostMapping("")와 동일. Post일 경우 간결하게 원하면 지금처럼 작성하면 된다.
      */
-    //회원가입
     @PostMapping("/signUp")
-    public int signUp(@Valid UserDto userDto){
-        // postman으로 들어온 값이 null인지 유효성 체크
-        // 들어온 값을 받아서 전달
+    public int signUp(@Valid UserDto userDto) {
         int result = 0;
         String regexPhoneNum = "^01(?:0|1|[6-9])-(?:\\d{3}|\\d{4})-\\d{4}$";
         boolean isRegexPhoneNum = Pattern.matches(regexPhoneNum, userDto.getPhoneNumber());
-
-        if(!isRegexPhoneNum){
+        if (!isRegexPhoneNum) {
             System.out.println("휴대폰번호를 확인해주세요. (입력 예시:010-1234-1234) ");
         } else {
             result = userService.signUp(userDto);
         }
-
         return result;
     }
 
-    //회원 탈퇴
     @PostMapping("/userWithdraw")
-    public int userWithdraw(@Valid String userId){
-        // 삭제가 아닌 회원 테이블의 is_withdraw 컬럼을 update한다.
-        int result = userService.userWithdraw(userId);
+    public int userWithdraw(@Valid String userId) {
+        return userService.userWithdraw(userId);
+    }
 
+    @PatchMapping("")
+    public int userInfoUpdate(UserDto userDto) {
+        int result = 0;
+        if (StringUtils.isBlank(userDto.getUserId()))
+            System.out.println("회원아이디 없음.");
+        else
+            result = userService.userInfoUpdate(userDto);
         return result;
     }
 
-    //회원 수정
-
+    //TODO: kakao 로그인
+    @PostMapping("/kakao-login")
+    public void kakaoLogin() {
+    }
 }

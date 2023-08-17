@@ -5,10 +5,10 @@
 <mapper namespace="com.ccommit.fashionserver.mapper.UserMapper">
 
     <!--아이디 존재 유무 체크-->
-    <select id="idCheck" resultType="int">
+    <select id="isIdCheck" resultType="int">
         SELECT COUNT(id)
-          FROM users
-         WHERE user_id = #{userId}
+        FROM users
+        WHERE user_id = #{userId}
     </select>
 
     <!--회원 등록-->
@@ -28,12 +28,40 @@
     <!--회원 탈퇴-->
     <update id="userWithdraw" parameterType="String">
         UPDATE users
-           SET update_date = now(),
-               is_withdraw = 0
-         WHERE user_id = #{userId}
+        SET update_date = now(),
+            is_withdraw = 0
+        WHERE user_id = #{userId}
     </update>
 
     <!--회원 수정-->
+    <update id="userInfoUpdate" parameterType="com.ccommit.fashionserver.dto.UserDto">
+        UPDATE users
+        SET
+            <if test="address != null &amp;&amp; !address.equals('') ">
+                address = #{address},
+            </if>
+            <if test="password != null&amp;&amp; !password.equals('') ">
+                password = #{password},
+            </if>
+            <if test="phoneNumber != null &amp;&amp; !phoneNumber.equals('') ">
+                phone_number = #{phoneNumber},
+            </if>
+        update_date = now()
+        WHERE user_id = #{userId}
+    </update>
 
+    <select id="checkUserInfo" resultType="com.ccommit.fashionserver.dto.UserDto">
+        SELECT id,
+               user_id,
+               address,
+               phone_number,
+               create_date,
+               update_date,
+               sign_status,
+               is_withdraw,
+               is_admin
+        FROM users
+        WHERE user_id = #{userId}
+    </select>
 
 </mapper>

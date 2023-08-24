@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ccommit.fashionserver.mapper.ProductMapper">
+
+    <select id="isProduct" resultType="int">
+        SELECT COUNT(name)
+        FROM products
+        WHERE name LIKE '%#{name}%'
+    </select>
+
+    <insert id="insertProduct" parameterType="com.ccommit.fashionserver.dto.ProductDto">
+        <selectKey keyProperty="id" resultType="int" order="BEFORE">
+            SELECT IFNULL(max(id)+1,1) as id
+            FROM products
+        </selectKey>
+        INSERT INTO products (id, name, sale_quantity, price, category_id, like_count, brand_name, sale_id, create_date)
+        VALUES (#{id}, #{name}, #{saleQuantity}, #{price}, #{cateId}, 0, #{brandName}, #{saleId}, now())
+    </insert>
+
+    <update id="updateProduct" parameterType="com.ccommit.fashionserver.dto.ProductDto">
+        UPDATE products
+        SET
+        <if test="name != null &amp;&amp; !name.equals('') ">
+            name = #{name},
+        </if>
+        <if test="saleQuantity != null &amp;&amp; !saleQuantity.equals('') ">
+            sale_quantity = #{saleQuantity},
+        </if>
+        <if test="price != null &amp;&amp; !price.equals('') ">
+            price =  #{price},
+        </if>
+        <if test="cateId != null &amp;&amp; !cateId.equals('') ">
+            cate_id = #{cateId},
+        </if>
+        <if test="brandName != null &amp;&amp; !brandName.equals('') ">
+            brand_name = #{brandName},
+        </if>
+        <if test="saleId != null &amp;&amp; !saleId.equals('') ">
+            sale_id = #{saleId},
+        </if>
+            update_date = now()
+        WHERE id = #{id}
+    </update>
+
+    <select id="detailProduct" resultType="com.ccommit.fashionserver.dto.ProductDto">
+        SELECT id,
+        name,
+        sale_quantity,
+        price,
+        cate_id,
+        like_count,
+        brand_name,
+        sale_id,
+        create_date,
+        update_date
+        FROM products
+        WHERE id = #{id}
+    </select>
+
+
+</mapper>

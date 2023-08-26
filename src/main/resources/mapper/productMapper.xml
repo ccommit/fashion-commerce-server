@@ -16,7 +16,7 @@
             FROM products
         </selectKey>
         INSERT INTO products (id, name, sale_quantity, price, category_id, like_count, brand_name, sale_id, create_date)
-        VALUES (#{id}, #{name}, #{saleQuantity}, #{price}, #{cateId}, 0, #{brandName}, #{saleId}, now())
+        VALUES (#{id}, #{name}, #{saleQuantity}, #{price}, #{categoryId}, 0, #{brandName}, #{saleId}, now())
     </insert>
 
     <update id="updateProduct" parameterType="com.ccommit.fashionserver.dto.ProductDto">
@@ -31,8 +31,8 @@
         <if test="price != null &amp;&amp; !price.equals('') ">
             price =  #{price},
         </if>
-        <if test="cateId != null &amp;&amp; !cateId.equals('') ">
-            cate_id = #{cateId},
+        <if test="categoryId != null &amp;&amp; !categoryId.equals('') ">
+            cate_id = #{categoryId},
         </if>
         <if test="brandName != null &amp;&amp; !brandName.equals('') ">
             brand_name = #{brandName},
@@ -49,7 +49,7 @@
         name,
         sale_quantity,
         price,
-        cate_id,
+        category_id,
         like_count,
         brand_name,
         sale_id,

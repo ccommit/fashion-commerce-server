@@ -1,6 +1,6 @@
 package com.ccommit.fashionserver.dto;
 
-import com.ccommit.fashionserver.service.PhonNumCheck;
+import com.ccommit.fashionserver.service.PhoneNumCheck;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -27,7 +27,7 @@ public class UserDto {
     @NotBlank
     private String password;       //비밀번호
     @NotBlank
-    @PhonNumCheck
+    @PhoneNumCheck
     private String phoneNumber;    //휴대폰번호
     private Date createDate;       //생성날짜
     private Date updateDate;       //수정날짜

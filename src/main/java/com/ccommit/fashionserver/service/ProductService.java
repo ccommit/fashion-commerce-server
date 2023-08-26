@@ -19,7 +19,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class ProductService {
     @Autowired
-    ProductMapper productMapper;
+    private final ProductMapper productMapper;
+
+    public ProductService(ProductMapper productMapper) {
+        this.productMapper = productMapper;
+    }
 
     public int insertProduct(ProductDto productDto) {
         int result = productMapper.insertProduct(productDto);

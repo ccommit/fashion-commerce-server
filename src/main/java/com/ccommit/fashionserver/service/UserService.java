@@ -4,13 +4,11 @@ import com.ccommit.fashionserver.dto.UserDto;
 import com.ccommit.fashionserver.dto.UserType;
 import com.ccommit.fashionserver.mapper.UserMapper;
 import com.ccommit.fashionserver.utils.BcryptEncoder;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpSession;
-import java.util.regex.Pattern;
 
 /**
  * packageName    : com.ccommit.fashionserver.service
@@ -23,37 +21,34 @@ import java.util.regex.Pattern;
  * -----------------------------------------------------------
  * 2023-07-27        juoiy       최초 생성
  */
-@Slf4j
 @Service
 public class UserService {
     @Autowired
-    UserMapper userMapper;
+    private final UserMapper userMapper;
 
     @Autowired
-    BcryptEncoder encrypt;
+    private final BcryptEncoder encrypt;
 
-    public boolean isIdCheck(String userId) {
-        return userMapper.isIdCheck(userId) == 1;
+    public UserService(UserMapper userMapper, BcryptEncoder encrypt) {
+        this.userMapper = userMapper;
+        this.encrypt = encrypt;
+    }
+
+    public boolean isExistId(String userId) {
+        return userMapper.isExistId(userId) == 1;
     }
 
     //회원가입
     public int signUp(UserDto userDto) {
         int result = 0;
-        String regexPhoneNum = "^01(?:0|1|[6-9])-(?:\\d{3}|\\d{4})-\\d{4}$";
 
-        if (isIdCheck(userDto.getUserId())) {
+        if (isExistId(userDto.getUserId())) {
             throw new RuntimeException("중복된 아이디 존재");
         } else {
-            //boolean isRegexPhoneNum = Pattern.matches(regexPhoneNum, userDto.getPhoneNumber());
-            //if (!isRegexPhoneNum) {
-            //  System.out.println("휴대폰번호를 확인해주세요. (입력 예시:010-1234-1234) ");
-            //    throw new IllegalArgumentException("휴대폰번호를 확인해주세요. (입력 예시:010-1234-1234) ");
-            //} else {
             userDto.setPassword(encrypt.hashPassword(userDto.getPassword()));
             userDto.setPhoneNumber(userDto.getPhoneNumber());
             userDto.setJoin(true);
             userDto.setWithdraw(false);
-            log.info("userDto.getUserType()  " + userDto.getUserType());
             if (userDto.getUserType().equals(UserType.USER))
                 userDto.setUserType(UserType.USER);
             else if (userDto.getUserType().equals(UserType.SELLER))
@@ -61,8 +56,8 @@ public class UserService {
             else if (userDto.getUserType().equals(UserType.ADMIN))
                 userDto.setUserType(UserType.ADMIN);
 
+            // TODO: 재가입 조건 30일 미만이면 예외 발생
             result = userMapper.signUp(userDto);
-            //}
         }
         return result;
     }
@@ -75,21 +70,15 @@ public class UserService {
 
     public int userInfoUpdate(UserDto userDto) {
         int result = 0;
-        String regexPhoneNum = "^01(?:0|1|[6-9])-(?:\\d{3}|\\d{4})-\\d{4}$";
-        boolean isRegexPhoneNum = true;
-        if (!isIdCheck(userDto.getUserId())) {
+
+        if (!isExistId(userDto.getUserId())) {
             throw new RuntimeException("존재하지 않는 회원입니다.");
         } else {
             if (!StringUtils.isBlank(userDto.getPassword())) {
                 userDto.setPassword(encrypt.hashPassword(userDto.getPassword()));
             }
             if (!StringUtils.isBlank(userDto.getPhoneNumber())) {
-                isRegexPhoneNum = Pattern.matches(regexPhoneNum, userDto.getPhoneNumber());
-                if (!isRegexPhoneNum) {
-                    throw new RuntimeException("휴대폰번호를 확인해주세요. (입력 예시:010-1234-1234) ");
-                } else {
-                    userDto.setPhoneNumber(userDto.getPhoneNumber());
-                }
+                userDto.setPhoneNumber(userDto.getPhoneNumber());
             }
             if (!StringUtils.isBlank(userDto.getAddress())) {
                 userDto.setAddress(userDto.getAddress());
@@ -105,10 +94,10 @@ public class UserService {
         return result;
     }
 
-    public boolean login(String id, String password) {
+    public boolean loginCheck(String id, String password) {
         boolean result = false;
         String hashedPassword = "";
-        if (!isIdCheck(id)) {
+        if (!isExistId(id)) {
             throw new RuntimeException("존재하지 않는 회원입니다.");
         } else {
             hashedPassword = userMapper.readUserInfo(id).getPassword();

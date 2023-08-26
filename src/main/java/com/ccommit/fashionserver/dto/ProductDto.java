@@ -23,7 +23,7 @@ public class ProductDto {
     private String name;            // 상품명
     private String saleQuantity;    // 판매수량
     private String price;           // 가격
-    private int cateId;             // 카테고리번호
+    private int categoryId;             // 카테고리번호
     private int likeCount;          // 좋아요수
     private String brandName;       // 브랜드명
     private int saleId;             // 판매자아이디

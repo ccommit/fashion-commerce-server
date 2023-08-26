@@ -18,7 +18,7 @@ import org.apache.ibatis.annotations.Mapper;
 public interface UserMapper {
     int signUp(UserDto userDto);
 
-    int isIdCheck(String userId);
+    int isExistId(String userId);
 
     int userWithdraw(String userId);
 

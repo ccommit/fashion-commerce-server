@@ -31,7 +31,7 @@ public class ProductController {
         return productDto;
     }
 
-    @PostMapping("/insert")
+    @PostMapping("")
     public int insertProduct(ProductDto productDto) {
         int result = 0;
         return result = productService.insertProduct(productDto);

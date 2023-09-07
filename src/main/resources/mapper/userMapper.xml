@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ccommit.fashionserver.mapper.UserMapper">
+
+    <select id="isIdCheck" resultType="int">
+        SELECT COUNT(id)
+        FROM users
+        WHERE user_id = #{userId}
+    </select>
+
+    <insert id="signUp" parameterType="com.ccommit.fashionserver.dto.UserDto">
+        <selectKey keyProperty="id" resultType="int" order="BEFORE">
+            SELECT IFNULL(max(id)+1,1) as id
+            FROM users
+        </selectKey>
+        INSERT INTO users (id, address, password, phone_number, update_date, create_date, is_join
+        , is_withdraw, user_id, user_type)
+        VALUES (#{id}, #{address}, #{password}, #{phoneNumber}, #{updateDate}, now(), #{isJoin},
+        #{isWithdraw},#{userId}, #{userType})
+    </insert>
+
+    <update id="userWithdraw" parameterType="String">
+        UPDATE users
+        SET update_date = now(),
+            is_withdraw = 0
+        WHERE user_id = #{userId}
+    </update>
+
+    <update id="userInfoUpdate" parameterType="com.ccommit.fashionserver.dto.UserDto">
+        UPDATE users
+        SET
+            <if test="address != null &amp;&amp; !address.equals('') ">
+                address = #{address},
+            </if>
+            <if test="password != null&amp;&amp; !password.equals('') ">
+                password = #{password},
+            </if>
+            <if test="phoneNumber != null &amp;&amp; !phoneNumber.equals('') ">
+                phone_number = #{phoneNumber},
+            </if>
+              update_date = now()
+        WHERE user_id = #{userId}
+    </update>
+
+    <select id="readUserInfo" resultType="com.ccommit.fashionserver.dto.UserDto">
+        SELECT id,
+               password,
+               user_id,
+               address,
+               phone_number,
+               create_date,
+               update_date,
+               is_join,
+               is_withdraw,
+               user_type
+        FROM users
+        WHERE user_id = #{id}
+    </select>
+
+</mapper>

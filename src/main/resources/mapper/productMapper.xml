@@ -4,60 +4,90 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ccommit.fashionserver.mapper.ProductMapper">
 
-    <select id="isProduct" resultType="int">
-        SELECT COUNT(name)
-        FROM products
-        WHERE name LIKE '%#{name}%'
-    </select>
-
     <insert id="insertProduct" parameterType="com.ccommit.fashionserver.dto.ProductDto">
-        <selectKey keyProperty="id" resultType="int" order="BEFORE">
-            SELECT IFNULL(max(id)+1,1) as id
-            FROM products
-        </selectKey>
-        INSERT INTO products (id, name, sale_quantity, price, category_id, like_count, brand_name, sale_id, create_date)
-        VALUES (#{id}, #{name}, #{saleQuantity}, #{price}, #{categoryId}, 0, #{brandName}, #{saleId}, now())
+        INSERT INTO products (id, name, sale_quantity, price, category_id, brand_name,create_date,
+        sale_id)
+        VALUES (#{id}, #{name}, #{saleQuantity}, #{price}, #{categoryId}, #{brandName},now(),
+        #{saleId})
     </insert>
 
     <update id="updateProduct" parameterType="com.ccommit.fashionserver.dto.ProductDto">
         UPDATE products
         SET
-        <if test="name != null &amp;&amp; !name.equals('') ">
+        <if test="name != null and !name.equals('') ">
             name = #{name},
         </if>
-        <if test="saleQuantity != null &amp;&amp; !saleQuantity.equals('') ">
+        <if test="saleQuantity != null and !saleQuantity.equals('') ">
             sale_quantity = #{saleQuantity},
         </if>
-        <if test="price != null &amp;&amp; !price.equals('') ">
+        <if test="price != null and !price.equals('') ">
             price =  #{price},
         </if>
-        <if test="categoryId != null &amp;&amp; !categoryId.equals('') ">
-            cate_id = #{categoryId},
+        <if test="categoryId != 0 and categoryId != null and !categoryId.equals('') ">
+            category_id = #{categoryId},
         </if>
-        <if test="brandName != null &amp;&amp; !brandName.equals('') ">
+        <if test="brandName != null and !brandName.equals('') ">
             brand_name = #{brandName},
         </if>
-        <if test="saleId != null &amp;&amp; !saleId.equals('') ">
             sale_id = #{saleId},
-        </if>
             update_date = now()
         WHERE id = #{id}
     </update>
 
+    <select id="listProduct" resultType="com.ccommit.fashionserver.dto.ProductDto">
+        SELECT  id,
+                name,
+                sale_quantity,
+                price,
+                brand_name,
+                category_id,
+                like_count,
+                sale_id,
+                create_date,
+                update_date
+        FROM products
+    </select>
+
     <select id="detailProduct" resultType="com.ccommit.fashionserver.dto.ProductDto">
-        SELECT id,
-        name,
-        sale_quantity,
-        price,
-        category_id,
-        like_count,
-        brand_name,
-        sale_id,
-        create_date,
-        update_date
+        SELECT  id,
+                name,
+                sale_quantity,
+                price,
+                category_id,
+                like_count,
+                brand_name,
+                create_date,
+                update_date
         FROM products
         WHERE id = #{id}
     </select>
 
+    <select id="sortProduct" resultType="com.ccommit.fashionserver.dto.ProductDto">
+        SELECT  id,
+                name,
+                sale_quantity,
+                price,
+                category_id,
+                like_count,
+                brand_name,
+                create_date
+        FROM products
+        WHERE 1 = 1
+        <if test="categoryId != null and categoryId.equals('')">
+            category_id = #{categoryId}
+        </if>
+        <if test="searchType == 'NEW'  and searchType.equals('NEW') ">
+            ORDER BY create_date DESC
+        </if>
+        <if test="searchType == 'LOW_PRICE' and searchType.equals('LOW_PRICE') ">
+            ORDER BY CAST(price AS UNSIGNED) ASC
+        </if>
+        <if test="searchType == 'HIGH_PRICE' and searchType.equals('HIGH_PRICE') ">
+            ORDER BY CAST(price AS UNSIGNED) DESC
+        </if>
+        <if test="searchType == 'LIKE' and searchType.equals('LIKE') ">
+            ORDER BY like_count DESC
+        </if>
+    </select>
 
 </mapper>

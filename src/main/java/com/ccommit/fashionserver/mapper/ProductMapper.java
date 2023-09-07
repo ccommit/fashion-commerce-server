@@ -3,6 +3,8 @@ package com.ccommit.fashionserver.mapper;
 import com.ccommit.fashionserver.dto.ProductDto;
 import org.apache.ibatis.annotations.Mapper;
 
+import java.util.List;
+
 /**
  * packageName    : com.ccommit.fashionserver.mapper
  * fileName       : ProductMapper
@@ -20,4 +22,10 @@ public interface ProductMapper {
     int insertProduct(ProductDto productDto);
 
     int updateProduct(ProductDto productDto);
+
+    ProductDto detailProduct(int id);
+
+    List<ProductDto> listProduct();
+
+    List<ProductDto> sortProduct(int categoryId, String searchType);
 }

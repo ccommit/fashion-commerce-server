@@ -45,6 +45,9 @@ public class UserService {
         if (isExistId(userDto.getUserId())) {
             throw new RuntimeException("중복된 아이디 존재");
         } else {
+            if(userMapper.isJoinPossible(userDto.getUserId()) == 1){
+                throw new RuntimeException("탈퇴날짜 기준으로 30일 이내로 재가입 불가");
+            }
             userDto.setPassword(encrypt.hashPassword(userDto.getPassword()));
             userDto.setPhoneNumber(userDto.getPhoneNumber());
             userDto.setJoin(true);
@@ -55,8 +58,6 @@ public class UserService {
                 userDto.setUserType(UserType.SELLER);
             else if (userDto.getUserType().equals(UserType.ADMIN))
                 userDto.setUserType(UserType.ADMIN);
-
-            // TODO: 재가입 조건 30일 미만이면 예외 발생
             result = userMapper.signUp(userDto);
         }
         return result;
@@ -94,7 +95,7 @@ public class UserService {
         return result;
     }
 
-    public boolean loginCheck(String id, String password) {
+    public boolean passwordCheck(String id, String password) {
         boolean result = false;
         String hashedPassword = "";
         if (!isExistId(id)) {

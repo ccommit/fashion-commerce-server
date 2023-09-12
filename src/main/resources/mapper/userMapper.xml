@@ -4,10 +4,11 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ccommit.fashionserver.mapper.UserMapper">
 
-    <select id="isIdCheck" resultType="int">
+    <select id="isExistId" resultType="int">
         SELECT COUNT(id)
         FROM users
         WHERE user_id = #{userId}
+        AND is_withdraw = 0
     </select>
 
     <insert id="signUp" parameterType="com.ccommit.fashionserver.dto.UserDto">
@@ -21,10 +22,22 @@
         #{isWithdraw},#{userId}, #{userType})
     </insert>
 
+    <select id="isJoinPossible" resultType="int">
+        SELECT COUNT(A.id)
+        FROM users as A,
+            (SELECT id, user_id, DATE_ADD(DATE_FORMAT(update_date, '%Y-%m-%d'), INTERVAL 30 DAY) as joinPossibleDate ,
+                    update_date
+             FROM users) as B
+        WHERE A.id = B.id
+        AND B.joinPossibleDate > now()
+        AND A.user_id = #{userId}
+        AND A.is_withdraw = 1
+    </select>
+
     <update id="userWithdraw" parameterType="String">
         UPDATE users
         SET update_date = now(),
-            is_withdraw = 0
+            is_withdraw = 1
         WHERE user_id = #{userId}
     </update>
 

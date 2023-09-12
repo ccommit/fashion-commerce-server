@@ -57,7 +57,7 @@ public class UserController {
     public int userInfoUpdate(UserDto userDto) {
         int result = 0;
         if (StringUtils.isBlank(userDto.getUserId()))
-            logger.info("log4j2 INFO: 아이디가 빈 값입니다. 확인해주세요.");
+            logger.debug("log4j2 INFO: 아이디가 빈 값입니다. 확인해주세요.");
         else
             result = userService.userInfoUpdate(userDto);
         return result;
@@ -67,21 +67,21 @@ public class UserController {
     public void login(String id, String password, HttpSession session) {
         boolean loginCheckResult = false;
         if (StringUtils.isBlank(id) || StringUtils.isBlank(password)) {
-            logger.info("log4j2 INFO: 아이디 또는 비밀번호가 빈 값입니다. 확인해주세요.");
+            logger.debug("log4j2 INFO: 아이디 또는 비밀번호가 빈 값입니다. 확인해주세요.");
             throw new RuntimeException("아이디 또는 비밀번호가 빈 값입니다. 확인해주세요.");
         }
-        loginCheckResult = userService.loginCheck(id, password);
+        loginCheckResult = userService.passwordCheck(id, password);
         if (loginCheckResult) {
             session.setAttribute("userId", id);
-            logger.info("log4j2 INFO: 로그인 성공");
+            logger.debug("log4j2 DEBUG: 로그인 성공");
         } else {
-            logger.info("log4j2 INFO: 로그인 실패");
+            logger.debug("log4j2 DEBUG: 로그인 실패");
         }
         logger.info("로그인 세션 = " + session.getAttribute("userId"));
     }
 
     @GetMapping("/logout")
-    public void logout(String id, HttpSession session) {
+    public void logout(HttpSession session) {
         userService.clearSession(session);
         logger.info("log4j2 INFO: 로그아웃");
     }

@@ -25,4 +25,6 @@ public interface UserMapper {
     int userInfoUpdate(UserDto userDto);
 
     UserDto readUserInfo(String userId);
+
+    int isJoinPossible(String userId);
 }

@@ -18,7 +18,6 @@ https://ovenapp.io/view/fGQCAoA4y8tBMSce9LzDsoBdZJoOjoKU/ROoSh
 
 ## 프로그램 주요 기능
 #### 계정
-- 카카오 로그인 API 연동
 - 로그인 세션 만료 시간 1시간
 - 로그아웃
 - 회원 정보 변경 (아이디, 주소, 비밀번호, 휴대폰번호, 변경날짜, 생성날짜, signState, isWhithDraw)

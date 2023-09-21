@@ -1,4 +1,4 @@
-package com.ccommit.fashionserver;
+package com.example.fashioncommerceserver;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

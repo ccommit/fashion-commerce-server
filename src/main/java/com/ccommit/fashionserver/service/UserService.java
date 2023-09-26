@@ -1,11 +1,16 @@
 package com.ccommit.fashionserver.service;
 
+import com.ccommit.fashionserver.controller.UserController;
 import com.ccommit.fashionserver.dto.UserDto;
 import com.ccommit.fashionserver.dto.UserType;
+import com.ccommit.fashionserver.exception.DuplicateException;
+import com.ccommit.fashionserver.exception.PermissionDeniedException;
 import com.ccommit.fashionserver.mapper.UserMapper;
 import com.ccommit.fashionserver.utils.BcryptEncoder;
 import com.ccommit.fashionserver.utils.SessionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +36,8 @@ public class UserService {
     @Autowired
     private final BcryptEncoder encrypt;
 
+    public static final Logger logger = LogManager.getLogger(UserController.class);
+
     public UserService(UserMapper userMapper, BcryptEncoder encrypt) {
         this.userMapper = userMapper;
         this.encrypt = encrypt;
@@ -41,30 +48,31 @@ public class UserService {
     }
 
     //회원가입
-    public int signUp(UserDto userDto) {
-        int result = 0;
-
+    public UserDto signUp(UserDto userDto) {
+        UserDto result = new UserDto();
         if (isExistId(userDto.getUserId())) {
-            throw new RuntimeException("중복된 아이디 존재");
+            throw new DuplicateException("중복된 아이디입니다. 확인해주세요.");
         } else {
             if (userMapper.isJoinPossible(userDto.getUserId()) == 1) {
-                throw new RuntimeException("탈퇴날짜 기준으로 30일 이내로 재가입 불가");
+                logger.debug("탈퇴날짜 기준으로 30일 이내로 재가입 불가");
+                throw new PermissionDeniedException("가입 권한이 없습니다.");
             }
             userDto.setPassword(encrypt.hashPassword(userDto.getPassword()));
             userDto.setPhoneNumber(userDto.getPhoneNumber());
             userDto.setJoin(true);
             userDto.setWithdraw(false);
-
             Arrays.stream(UserType.values())
                     .filter(userType -> userDto.getUserType().equals(userType.getName()))
                     .forEach(userType -> {
                         if (userDto.getUserType().equals(userType.getName())) {
                             userDto.setUserType(userType);
                         } else {
-                            throw new RuntimeException("존재하지 않는 회원 타입입니다.");
+                            logger.debug("존재하지 않는 회원 타입입니다.");
+                            throw new NullPointerException("존재하지 않는 회원 타입입니다.");
                         }
                     });
-            result = userMapper.signUp(userDto);
+            userMapper.signUp(userDto);
+            result = userMapper.readUserInfo(userDto.getUserId());
         }
         return result;
     }
@@ -77,7 +85,7 @@ public class UserService {
         int result = 0;
 
         if (!isExistId(userDto.getUserId())) {
-            throw new RuntimeException("존재하지 않는 회원입니다.");
+            throw new NullPointerException("존재하지 않는 회원입니다.");
         } else {
             if (!StringUtils.isBlank(userDto.getPassword())) {
                 userDto.setPassword(encrypt.hashPassword(userDto.getPassword()));
@@ -99,12 +107,12 @@ public class UserService {
         boolean isMachPassword = false;
         String hashedPassword = "";
         if (!isExistId(userId))
-            throw new RuntimeException("존재하지 않는 회원입니다.");
+            throw new NullPointerException("존재하지 않는 회원입니다.");
         else
             hashedPassword = userMapper.readUserInfo(userId).getPassword();
 
         if (StringUtils.isBlank(hashedPassword))
-            throw new RuntimeException("회원 비밀번호 조회 실패");
+            throw new NullPointerException("회원 정보가 없습니다.");
         else
             isMachPassword = encrypt.isMach(password, hashedPassword);
 

@@ -1,13 +1,17 @@
 package com.ccommit.fashionserver.controller;
 
+import com.ccommit.fashionserver.aop.CommonResponse;
 import com.ccommit.fashionserver.aop.LoginCheck;
 import com.ccommit.fashionserver.dto.UserDto;
+import com.ccommit.fashionserver.exception.NotMatchException;
 import com.ccommit.fashionserver.service.UserService;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
@@ -48,53 +52,61 @@ public class UserController {
      * 아래의 @PostMapping("")와 동일. Post일 경우 간결하게 원하면 지금처럼 작성하면 된다.
      */
     @PostMapping("/sign-up")
-    public int signUp(@Valid UserDto userDto) {
-        int result = result = userService.signUp(userDto);
-        return result;
+    public ResponseEntity<CommonResponse<UserDto>> signUp(@Valid UserDto userDto) {
+        logger.debug("Sign Up Start");
+        UserDto userDtoResult = userService.signUp(userDto);
+        CommonResponse<UserDto> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", userDto.getUserId() + "님 로그인", userDtoResult);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/withdraw/{id}")
     @LoginCheck(types = {LoginCheck.UserType.USER})
-    public int userWithdraw(Integer loginSession, @PathVariable("id") int id) {
-        if(loginSession != id)
-            throw new RuntimeException("로그인한 사용자와 탈퇴하려는 사용자가 일치하지 않습니다.");
-        else
-            return userService.userWithdraw(id);
+    public ResponseEntity<CommonResponse<String>> userWithdraw(Integer loginSession, @PathVariable("id") int id) {
+        if (loginSession != id)
+            throw new NotMatchException("회원정보가 불일치합니다. 확인해주세요.");
+        userService.userWithdraw(id);
+        CommonResponse<String> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "정상적으로 탈퇴되었습니다.", null);
+        return ResponseEntity.ok(response);
     }
 
     @PatchMapping("/{id}")
     @LoginCheck(types = {LoginCheck.UserType.USER, LoginCheck.UserType.SELLER})
-    public int userInfoUpdate(Integer loginSession, @PathVariable("id") int id, UserDto userDto) {
+    public ResponseEntity<CommonResponse<String>> userInfoUpdate(Integer loginSession, @PathVariable("id") int id, UserDto userDto) {
         int result = 0;
         if (StringUtils.isBlank(userDto.getUserId()))
-            throw new NullPointerException("아이디가 빈 값입니다. 확인해주세요.");
+            throw new NullPointerException("아이디를 확인해주세요.");
+        else if (loginSession == id)
+            result = userService.userInfoUpdate(id, userDto);
         else
-            if(loginSession == id)
-                result = userService.userInfoUpdate(id, userDto);
-            else
-                throw new RuntimeException("로그인한 사용자와 수정하려는 사용자가 일치하지 않습니다.");
-        return result;
+            throw new NotMatchException("회원정보가 불일치합니다. 확인해주세요.");
+
+        CommonResponse<String> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "정상적으로 회원정보가 수정되었습니다.", null);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
-    public void login(UserDto userDto, HttpSession session) {
+    public ResponseEntity<CommonResponse<UserDto>> login(UserDto userDto, HttpSession session) {
         if (StringUtils.isBlank(userDto.getUserId()) || StringUtils.isBlank(userDto.getPassword())) {
-            throw new NullPointerException("아이디 또는 비밀번호가 빈 값입니다. 확인해주세요.");
+            throw new NullPointerException("빈 값이 존재합니다. 확인해주세요.");
         }
-        logger.info("UserId : " + userDto.getUserId() + " Password: " + userDto.getPassword());
+        logger.debug("UserId : " + userDto.getUserId() + " Password: " + userDto.getPassword());
         UserDto userInfo = userService.passwordCheck(userDto.getUserId(), userDto.getPassword());
         if (userInfo.getId() == 0 || userInfo == null)
-            logger.debug("Login failed");
+            throw new NullPointerException("회원 정보가 없습니다.");
 
         userService.insertSession(session, userInfo);
-        logger.info("Login success = " + userInfo.getId());
+        logger.debug("Login success = " + userInfo.getId());
+        CommonResponse<UserDto> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", userDto.getUserId() + "회원 로그인", userInfo);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/logout")
     @LoginCheck(types = {LoginCheck.UserType.USER, LoginCheck.UserType.SELLER
             , LoginCheck.UserType.ADMIN})
-    public void logout(Integer loginSession, HttpSession session) {
+    public ResponseEntity<CommonResponse<String>> logout(Integer loginSession, HttpSession session) {
         userService.clearSession(session);
-        logger.info("Logout success");
+        logger.debug("Logout success");
+        CommonResponse<String> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "정상적으로 로그아웃 되었습니다.", null);
+        return ResponseEntity.ok(response);
     }
 }

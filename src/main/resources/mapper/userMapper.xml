@@ -34,11 +34,11 @@
         AND A.is_withdraw = 1
     </select>
 
-    <update id="userWithdraw" parameterType="String">
+    <update id="userWithdraw" parameterType="int">
         UPDATE users
         SET update_date = now(),
             is_withdraw = 1
-        WHERE user_id = #{userId}
+        WHERE id = #{id}
     </update>
 
     <update id="userInfoUpdate" parameterType="com.ccommit.fashionserver.dto.UserDto">
@@ -54,7 +54,7 @@
                 phone_number = #{phoneNumber},
             </if>
               update_date = now()
-        WHERE user_id = #{userId}
+        WHERE id = #{id}
     </update>
 
     <select id="readUserInfo" resultType="com.ccommit.fashionserver.dto.UserDto">
@@ -69,7 +69,7 @@
                is_withdraw,
                user_type
         FROM users
-        WHERE user_id = #{id}
+        WHERE user_id = #{userId}
     </select>
 
 </mapper>

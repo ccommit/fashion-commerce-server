@@ -20,7 +20,7 @@ public interface UserMapper {
 
     int isExistId(String userId);
 
-    int userWithdraw(String userId);
+    int userWithdraw(int id);
 
     int userInfoUpdate(UserDto userDto);
 

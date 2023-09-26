@@ -1,5 +1,6 @@
 package com.ccommit.fashionserver.controller;
 
+import com.ccommit.fashionserver.aop.LoginCheck;
 import com.ccommit.fashionserver.dto.UserDto;
 import com.ccommit.fashionserver.service.UserService;
 import lombok.extern.log4j.Log4j2;
@@ -34,9 +35,13 @@ import javax.validation.Valid;
 @RequestMapping("/users")
 public class UserController {
     @Autowired
-    private UserService userService;
+    private final UserService userService;
 
     public static final Logger logger = LogManager.getLogger(UserController.class);
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
     /**
      * @RequestMapping(method = RequestMethod.POST, path="")
@@ -48,41 +53,48 @@ public class UserController {
         return result;
     }
 
-    @PostMapping("/withdraw")
-    public int userWithdraw(@Valid String userId) {
-        return userService.userWithdraw(userId);
+    @PostMapping("/withdraw/{id}")
+    @LoginCheck(types = {LoginCheck.UserType.USER})
+    public int userWithdraw(Integer loginSession, @PathVariable("id") int id) {
+        if(loginSession != id)
+            throw new RuntimeException("로그인한 사용자와 탈퇴하려는 사용자가 일치하지 않습니다.");
+        else
+            return userService.userWithdraw(id);
     }
 
-    @PatchMapping("")
-    public int userInfoUpdate(UserDto userDto) {
+    @PatchMapping("/{id}")
+    @LoginCheck(types = {LoginCheck.UserType.USER, LoginCheck.UserType.SELLER})
+    public int userInfoUpdate(Integer loginSession, @PathVariable("id") int id, UserDto userDto) {
         int result = 0;
         if (StringUtils.isBlank(userDto.getUserId()))
-            logger.debug("log4j2 INFO: 아이디가 빈 값입니다. 확인해주세요.");
+            throw new NullPointerException("아이디가 빈 값입니다. 확인해주세요.");
         else
-            result = userService.userInfoUpdate(userDto);
+            if(loginSession == id)
+                result = userService.userInfoUpdate(id, userDto);
+            else
+                throw new RuntimeException("로그인한 사용자와 수정하려는 사용자가 일치하지 않습니다.");
         return result;
     }
 
     @PostMapping("/login")
-    public void login(String id, String password, HttpSession session) {
-        boolean loginCheckResult = false;
-        if (StringUtils.isBlank(id) || StringUtils.isBlank(password)) {
-            logger.debug("log4j2 INFO: 아이디 또는 비밀번호가 빈 값입니다. 확인해주세요.");
-            throw new RuntimeException("아이디 또는 비밀번호가 빈 값입니다. 확인해주세요.");
+    public void login(UserDto userDto, HttpSession session) {
+        if (StringUtils.isBlank(userDto.getUserId()) || StringUtils.isBlank(userDto.getPassword())) {
+            throw new NullPointerException("아이디 또는 비밀번호가 빈 값입니다. 확인해주세요.");
         }
-        loginCheckResult = userService.passwordCheck(id, password);
-        if (loginCheckResult) {
-            session.setAttribute("userId", id);
-            logger.debug("log4j2 DEBUG: 로그인 성공");
-        } else {
-            logger.debug("log4j2 DEBUG: 로그인 실패");
-        }
-        logger.info("로그인 세션 = " + session.getAttribute("userId"));
+        logger.info("UserId : " + userDto.getUserId() + " Password: " + userDto.getPassword());
+        UserDto userInfo = userService.passwordCheck(userDto.getUserId(), userDto.getPassword());
+        if (userInfo.getId() == 0 || userInfo == null)
+            logger.debug("Login failed");
+
+        userService.insertSession(session, userInfo);
+        logger.info("Login success = " + userInfo.getId());
     }
 
     @GetMapping("/logout")
-    public void logout(HttpSession session) {
+    @LoginCheck(types = {LoginCheck.UserType.USER, LoginCheck.UserType.SELLER
+            , LoginCheck.UserType.ADMIN})
+    public void logout(Integer loginSession, HttpSession session) {
         userService.clearSession(session);
-        logger.info("log4j2 INFO: 로그아웃");
+        logger.info("Logout success");
     }
 }

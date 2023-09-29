@@ -5,9 +5,13 @@ import com.ccommit.fashionserver.dto.ProductDto;
 import com.ccommit.fashionserver.dto.SearchType;
 import com.ccommit.fashionserver.mapper.ProductMapper;
 import com.ccommit.fashionserver.utils.ResultMessage;
+import lombok.extern.log4j.Log4j2;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -21,10 +25,9 @@ import java.util.List;
  * -----------------------------------------------------------
  * 2023-08-24        juoiy       최초 생성
  */
+@Log4j2
 @Service
 public class ProductService {
-    //TODO: logger 이용한 로깅처리 추
-    // private static final Logger logger = LogManager.getLogger(ProductService.class);
     @Autowired
     private final ProductMapper productMapper;
 
@@ -32,9 +35,26 @@ public class ProductService {
         this.productMapper = productMapper;
     }
 
+    public List<ProductDto> getProductList(String categoryName, String searchType) {
+        int categoryId = 0;
+        for (CategoryType categoryType : CategoryType.values()) {
+            if (categoryName.equals(categoryType.getName())) {
+                categoryId = categoryType.getNumber();
+                break;
+            }
+        }
+        if (categoryId == 0)
+            throw new IllegalArgumentException("존재하지 않는 카테고리입니다.");
 
-    public List<ProductDto> listProduct() {
-        List<ProductDto> productDtoList = productMapper.listProduct();
+        searchType = searchType.toUpperCase();
+        for (SearchType search : SearchType.values()) {
+            if (searchType.equals(search.getName())) {
+                searchType = search.getName();
+                break;
+            }
+        }
+        log.info("categoryId = " + categoryId + ", searchType = " + searchType);
+        List<ProductDto> productDtoList = productMapper.getProductList(categoryId, searchType);
         return productDtoList;
     }
 
@@ -46,14 +66,15 @@ public class ProductService {
     }
 
     public String insertProduct(ProductDto productDto) {
-        if (productDto.getCategoryId() == CategoryType.CLOTHING.getNumber())
-            productDto.setCategoryId(CategoryType.CLOTHING.getNumber());
-        if (productDto.getCategoryId() == CategoryType.BAG.getNumber())
-            productDto.setCategoryId(CategoryType.BAG.getNumber());
-        if (productDto.getCategoryId() == CategoryType.ACCESSORY.getNumber())
-            productDto.setCategoryId(CategoryType.ACCESSORY.getNumber());
-        if (productDto.getCategoryId() == CategoryType.SHOES.getNumber())
-            productDto.setCategoryId(CategoryType.SHOES.getNumber());
+        Arrays.stream(CategoryType.values())
+                .filter(categoryType -> productDto.getCategoryId() == categoryType.getNumber())
+                .forEach(categoryType -> {
+                    if (productDto.getCategoryId() == categoryType.getNumber()) {
+                        productDto.setCategoryId(categoryType.getNumber());
+                    } else {
+                        throw new IllegalArgumentException("존재하지 않는 카테고리입니다.");
+                    }
+                });
         int result = productMapper.insertProduct(productDto);
         String resultMessage = isResultMessage(result);
         return resultMessage;
@@ -68,20 +89,6 @@ public class ProductService {
     public ProductDto detailProduct(int id) {
         ProductDto productDto = productMapper.detailProduct(id);
         return productDto;
-    }
-
-    public List<ProductDto> sortProduct(int categoryId, String searchType) {
-        searchType = searchType.toUpperCase();
-        if (searchType.equals(SearchType.NEW))
-            searchType = SearchType.NEW.getName();
-        if (searchType.equals(SearchType.LOW_PRICE))
-            searchType = SearchType.LOW_PRICE.getName();
-        if (searchType.equals(SearchType.HIGH_PRICE))
-            searchType = SearchType.HIGH_PRICE.getName();
-        if (searchType.equals(SearchType.LIKE))
-            searchType = SearchType.LIKE.getName();
-        List<ProductDto> productDtoList = productMapper.sortProduct(categoryId, searchType);
-        return productDtoList;
     }
 
 }

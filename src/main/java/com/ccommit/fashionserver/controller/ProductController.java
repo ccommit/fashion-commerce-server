@@ -27,11 +27,15 @@ import java.util.List;
 @RequestMapping("/products")
 public class ProductController {
     @Autowired
-    private ProductService productService;
+    private final ProductService productService;
+
+    public ProductController(ProductService productService) {
+        this.productService = productService;
+    }
 
     @GetMapping("/list")
-    public List<ProductDto> getProductList() {
-        List<ProductDto> productDtoList = (List<ProductDto>) productService.listProduct();
+    public List<ProductDto> getProductList(String categoryName, String searchType) {
+        List<ProductDto> productDtoList = (List<ProductDto>) productService.getProductList(categoryName, searchType);
         return productDtoList;
     }
 
@@ -42,21 +46,18 @@ public class ProductController {
     }
 
     @PostMapping("")
+    //@LoginCheck(types = LoginCheck.UserType.SELLER)
     public String insertProduct(@Valid ProductDto productDto) {
         String result = productService.insertProduct(productDto);
         return result;
     }
 
     @PatchMapping("")
+    //@LoginCheck(types = LoginCheck.UserType.SELLER)
     public String updateProduct(ProductDto productDto) {
         String result = productService.updateProduct(productDto);
         return result;
     }
 
-    @GetMapping("/sort")
-    public List<ProductDto> sortProduct(int categoryId, String searchType) {
-        List<ProductDto> productDtoList = productService.sortProduct(categoryId, searchType);
-        return productDtoList;
-    }
 
 }

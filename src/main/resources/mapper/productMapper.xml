@@ -34,7 +34,7 @@
         WHERE id = #{id}
     </update>
 
-    <select id="listProduct" resultType="com.ccommit.fashionserver.dto.ProductDto">
+    <select id="getProductList" resultType="com.ccommit.fashionserver.dto.ProductDto">
         SELECT  id,
                 name,
                 sale_quantity,
@@ -46,6 +46,22 @@
                 create_date,
                 update_date
         FROM products
+        WHERE 1 = 1
+        <if test="categoryId != 50 and categoryId != null">
+            AND category_id = #{categoryId}
+        </if>
+        <if test="searchType == 'NEW'  and searchType.equals('NEW') ">
+            ORDER BY create_date DESC
+        </if>
+        <if test="searchType == 'LOW_PRICE' and searchType.equals('LOW_PRICE') ">
+            ORDER BY CAST(price AS UNSIGNED) ASC
+        </if>
+        <if test="searchType == 'HIGH_PRICE' and searchType.equals('HIGH_PRICE') ">
+            ORDER BY CAST(price AS UNSIGNED) DESC
+        </if>
+        <if test="searchType == 'LIKE' and searchType.equals('LIKE') ">
+            ORDER BY like_count DESC
+        </if>
     </select>
 
     <select id="detailProduct" resultType="com.ccommit.fashionserver.dto.ProductDto">
@@ -60,34 +76,6 @@
                 update_date
         FROM products
         WHERE id = #{id}
-    </select>
-
-    <select id="sortProduct" resultType="com.ccommit.fashionserver.dto.ProductDto">
-        SELECT  id,
-                name,
-                sale_quantity,
-                price,
-                category_id,
-                like_count,
-                brand_name,
-                create_date
-        FROM products
-        WHERE 1 = 1
-        <if test="categoryId != null and categoryId.equals('')">
-            category_id = #{categoryId}
-        </if>
-        <if test="searchType == 'NEW'  and searchType.equals('NEW') ">
-            ORDER BY create_date DESC
-        </if>
-        <if test="searchType == 'LOW_PRICE' and searchType.equals('LOW_PRICE') ">
-            ORDER BY CAST(price AS UNSIGNED) ASC
-        </if>
-        <if test="searchType == 'HIGH_PRICE' and searchType.equals('HIGH_PRICE') ">
-            ORDER BY CAST(price AS UNSIGNED) DESC
-        </if>
-        <if test="searchType == 'LIKE' and searchType.equals('LIKE') ">
-            ORDER BY like_count DESC
-        </if>
     </select>
 
 </mapper>

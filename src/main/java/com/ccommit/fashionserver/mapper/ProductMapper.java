@@ -25,7 +25,6 @@ public interface ProductMapper {
 
     ProductDto detailProduct(int id);
 
-    List<ProductDto> listProduct();
+    List<ProductDto> getProductList(int categoryId, String searchType);
 
-    List<ProductDto> sortProduct(int categoryId, String searchType);
 }

@@ -3,9 +3,9 @@ package com.ccommit.fashionserver.controller;
 import com.ccommit.fashionserver.aop.CommonResponse;
 import com.ccommit.fashionserver.aop.LoginCheck;
 import com.ccommit.fashionserver.dto.UserDto;
-import com.ccommit.fashionserver.exception.NotMatchException;
+import com.ccommit.fashionserver.exception.ErrorCode;
+import com.ccommit.fashionserver.exception.FashionServerException;
 import com.ccommit.fashionserver.service.UserService;
-import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -34,7 +34,6 @@ import javax.validation.Valid;
  * @ResponseBody를 붙여서 JSON을 만들었지만,
  * @RestController로 쉽게 알아서 전송 가능한 문자열 만들어준다.
  */
-@Log4j2
 @RestController
 @RequestMapping("/users")
 public class UserController {
@@ -63,24 +62,17 @@ public class UserController {
     @LoginCheck(types = {LoginCheck.UserType.USER})
     public ResponseEntity<CommonResponse<String>> userWithdraw(Integer loginSession, @PathVariable("id") int id) {
         if (loginSession != id)
-            throw new NotMatchException("회원정보가 불일치합니다. 확인해주세요.");
+            throw new FashionServerException(ErrorCode.valueOf("USER_UPDATE_ERROR").getMessage(), 602);
         userService.userWithdraw(id);
         CommonResponse<String> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "정상적으로 탈퇴되었습니다.", null);
         return ResponseEntity.ok(response);
     }
 
-    @PatchMapping("/{id}")
+    @PatchMapping("")
     @LoginCheck(types = {LoginCheck.UserType.USER, LoginCheck.UserType.SELLER})
-    public ResponseEntity<CommonResponse<String>> userInfoUpdate(Integer loginSession, @PathVariable("id") int id, UserDto userDto) {
-        int result = 0;
-        if (StringUtils.isBlank(userDto.getUserId()))
-            throw new NullPointerException("아이디를 확인해주세요.");
-        else if (loginSession == id)
-            result = userService.userInfoUpdate(id, userDto);
-        else
-            throw new NotMatchException("회원정보가 불일치합니다. 확인해주세요.");
-
-        CommonResponse<String> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "정상적으로 회원정보가 수정되었습니다.", null);
+    public ResponseEntity<CommonResponse<String>> userInfoUpdate(Integer loginSession, @RequestBody UserDto userDto) {
+        userService.userInfoUpdate(loginSession, userDto);
+        CommonResponse<String> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "정상적으로 회원정보가 수정되었습니다.", userDto.toString());
         return ResponseEntity.ok(response);
     }
 
@@ -92,7 +84,7 @@ public class UserController {
         logger.debug("UserId : " + userDto.getUserId() + " Password: " + userDto.getPassword());
         UserDto userInfo = userService.passwordCheck(userDto.getUserId(), userDto.getPassword());
         if (userInfo.getId() == 0 || userInfo == null)
-            throw new NullPointerException("회원 정보가 없습니다.");
+            throw new FashionServerException(ErrorCode.valueOf("USER_NOT_USING_ERROR").getMessage(), 602);
 
         userService.insertSession(session, userInfo);
         logger.debug("Login success = " + userInfo.getId());

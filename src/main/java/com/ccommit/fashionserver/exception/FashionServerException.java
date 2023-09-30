@@ -11,8 +11,14 @@ package com.ccommit.fashionserver.exception;
  * -----------------------------------------------------------
  * 2023-09-27        juoiy       최초 생성
  */
-public class DuplicateException extends RuntimeException {
-    public DuplicateException(String message) {
+public class FashionServerException extends RuntimeException {
+    public Integer status;
+    public FashionServerException(String message) {
         super(message);
+    }
+
+    public FashionServerException(String message, Integer status) {
+        super(message);
+        this.status = status;
     }
 }

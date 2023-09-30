@@ -3,8 +3,8 @@ package com.ccommit.fashionserver.service;
 import com.ccommit.fashionserver.controller.UserController;
 import com.ccommit.fashionserver.dto.UserDto;
 import com.ccommit.fashionserver.dto.UserType;
-import com.ccommit.fashionserver.exception.DuplicateException;
-import com.ccommit.fashionserver.exception.PermissionDeniedException;
+import com.ccommit.fashionserver.exception.ErrorCode;
+import com.ccommit.fashionserver.exception.FashionServerException;
 import com.ccommit.fashionserver.mapper.UserMapper;
 import com.ccommit.fashionserver.utils.BcryptEncoder;
 import com.ccommit.fashionserver.utils.SessionUtils;
@@ -51,11 +51,11 @@ public class UserService {
     public UserDto signUp(UserDto userDto) {
         UserDto result = new UserDto();
         if (isExistId(userDto.getUserId())) {
-            throw new DuplicateException("중복된 아이디입니다. 확인해주세요.");
+            throw new FashionServerException(ErrorCode.valueOf("USER_INSERT_DUPLICATE_ERROR").getMessage(), 601);
         } else {
             if (userMapper.isJoinPossible(userDto.getUserId()) == 1) {
                 logger.debug("탈퇴날짜 기준으로 30일 이내로 재가입 불가");
-                throw new PermissionDeniedException("가입 권한이 없습니다.");
+                throw new FashionServerException(ErrorCode.USER_NOT_AUTHORIZED_ERROR.getMessage(), 603);
             }
             userDto.setPassword(encrypt.hashPassword(userDto.getPassword()));
             userDto.setPhoneNumber(userDto.getPhoneNumber());
@@ -71,6 +71,7 @@ public class UserService {
                             throw new NullPointerException("존재하지 않는 회원 타입입니다.");
                         }
                     });
+            // DB 가 끊김.
             userMapper.signUp(userDto);
             result = userMapper.readUserInfo(userDto.getUserId());
         }
@@ -81,11 +82,9 @@ public class UserService {
         return userMapper.userWithdraw(id);
     }
 
-    public int userInfoUpdate(int id, UserDto userDto) {
-        int result = 0;
-
+    public void userInfoUpdate(int id, UserDto userDto) {
         if (!isExistId(userDto.getUserId())) {
-            throw new NullPointerException("존재하지 않는 회원입니다.");
+            throw new FashionServerException(ErrorCode.valueOf("USER_NOT_USING_ERROR").getMessage(), 604);
         } else {
             if (!StringUtils.isBlank(userDto.getPassword())) {
                 userDto.setPassword(encrypt.hashPassword(userDto.getPassword()));
@@ -97,9 +96,8 @@ public class UserService {
                 userDto.setAddress(userDto.getAddress());
             }
             userDto.setId(id);
-            result = userMapper.userInfoUpdate(userDto);
+            userMapper.userInfoUpdate(userDto);
         }
-        return result;
     }
 
     public UserDto passwordCheck(String userId, String password) {
@@ -107,12 +105,12 @@ public class UserService {
         boolean isMachPassword = false;
         String hashedPassword = "";
         if (!isExistId(userId))
-            throw new NullPointerException("존재하지 않는 회원입니다.");
+            throw new FashionServerException(ErrorCode.valueOf("USER_NOT_USING_ERROR").getMessage(), 604);
         else
             hashedPassword = userMapper.readUserInfo(userId).getPassword();
 
         if (StringUtils.isBlank(hashedPassword))
-            throw new NullPointerException("회원 정보가 없습니다.");
+            throw new NullPointerException("패스워드를 확인해주세요.");
         else
             isMachPassword = encrypt.isMach(password, hashedPassword);
 

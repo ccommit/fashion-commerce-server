@@ -10,6 +10,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpSession;
 
+
 /**
  * packageName    : com.ccommit.fashionserver.aop
  * fileName       : LoginCheckAspect
@@ -29,36 +30,25 @@ public class LoginCheckAspect {
         HttpSession session = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getSession();
         int id = 0;
         int index = 0;
-
+        Boolean isLoginCheck = false;
         for (int i = 0; i < loginCheck.types().length; i++) {
-            if (id == 0) {
+            if (isLoginCheck == false) {
                 switch (loginCheck.types()[i].toString()) {
                     case "USER":
-                        try {
-                            id = SessionUtils.getUserLoginSession(session);
-                        } catch (NullPointerException e) {
-                            id = 0;
-                        }
+                        id = SessionUtils.getUserLoginSession(session);
                         break;
                     case "SELLER":
-                        try {
-                            id = SessionUtils.getSellerLoginSession(session);
-                        } catch (NullPointerException e) {
-                            id = 0;
-                        }
+                        id = SessionUtils.getSellerLoginSession(session);
                         break;
                     case "ADMIN":
-                        try {
-                            id = SessionUtils.getAdminLoginSession(session);
-                        } catch (NullPointerException e) {
-                            id = 0;
-                        }
+                        id = SessionUtils.getAdminLoginSession(session);
                         break;
                 }
+                if (id != 0)
+                    isLoginCheck = true;
             }
         }
-
-        if (id == 0) {
+        if (isLoginCheck == false) {
             throw new Exception("로그인이 필요합니다.");
         }
         Object[] modifiedArgs = proceedingJoinPoint.getArgs();

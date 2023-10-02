@@ -3,6 +3,7 @@ package com.ccommit.fashionserver.dto;
 import com.ccommit.fashionserver.service.PhoneNumCheck;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import javax.validation.constraints.NotBlank;
 import java.sql.Date;
@@ -20,6 +21,7 @@ import java.sql.Date;
  */
 @Getter
 @Setter
+@ToString
 public class UserDto {
     private int id;                //번호
     @NotBlank

@@ -54,7 +54,7 @@ public class UserController {
     public ResponseEntity<CommonResponse<UserDto>> signUp(@Valid UserDto userDto) {
         logger.debug("Sign Up Start");
         UserDto userDtoResult = userService.signUp(userDto);
-        CommonResponse<UserDto> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", userDto.getUserId() + "님 로그인", userDtoResult);
+        CommonResponse<UserDto> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", userDto.getUserId() + "님 정상적으로 가입되었습니다.", userDtoResult);
         return ResponseEntity.ok(response);
     }
 

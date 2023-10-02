@@ -22,16 +22,18 @@
         #{isWithdraw},#{userId}, #{userType})
     </insert>
 
+    <select id="getJoinPossibleDate" resultType="String">
+        SELECT DATE_ADD(DATE_FORMAT(update_date, '%Y-%m-%d'), INTERVAL 30 DAY) as joinPossibleDate
+        FROM users
+        WHERE user_id = #{userId}
+    </select>
+
     <select id="isJoinPossible" resultType="int">
-        SELECT COUNT(A.id)
-        FROM users as A,
-            (SELECT id, user_id, DATE_ADD(DATE_FORMAT(update_date, '%Y-%m-%d'), INTERVAL 30 DAY) as joinPossibleDate ,
-                    update_date
-             FROM users) as B
-        WHERE A.id = B.id
-        AND B.joinPossibleDate > now()
-        AND A.user_id = #{userId}
-        AND A.is_withdraw = 1
+        SELECT COUNT(id)
+        FROM users
+        WHERE user_id = #{userId}
+        AND DATE_FORMAT(#{joinPossibleDate}, '%Y-%m-%d') > now()
+        AND is_withdraw = 1
     </select>
 
     <update id="userWithdraw" parameterType="int">
@@ -70,6 +72,7 @@
                user_type
         FROM users
         WHERE user_id = #{userId}
+        AND is_withdraw = 0
     </select>
 
 </mapper>

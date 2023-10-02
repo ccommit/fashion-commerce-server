@@ -50,10 +50,13 @@ public class UserService {
     //회원가입
     public UserDto signUp(UserDto userDto) {
         UserDto result = new UserDto();
+        String joinPossibleDate = "";
         if (isExistId(userDto.getUserId())) {
             throw new FashionServerException(ErrorCode.valueOf("USER_INSERT_DUPLICATE_ERROR").getMessage(), 601);
         } else {
-            if (userMapper.isJoinPossible(userDto.getUserId()) == 1) {
+            joinPossibleDate = userMapper.getJoinPossibleDate(userDto.getUserId());
+            logger.info("joinPossibleDate : " + joinPossibleDate);
+            if (userMapper.isJoinPossible(userDto.getUserId(), joinPossibleDate) == 1) {
                 logger.debug("탈퇴날짜 기준으로 30일 이내로 재가입 불가");
                 throw new FashionServerException(ErrorCode.USER_NOT_AUTHORIZED_ERROR.getMessage(), 603);
             }

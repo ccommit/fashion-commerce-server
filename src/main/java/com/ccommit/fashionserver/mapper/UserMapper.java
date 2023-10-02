@@ -26,5 +26,7 @@ public interface UserMapper {
 
     UserDto readUserInfo(String userId);
 
-    int isJoinPossible(String userId);
+    int isJoinPossible(String userId, String joinPossibleDate);
+
+    String getJoinPossibleDate(String userId);
 }

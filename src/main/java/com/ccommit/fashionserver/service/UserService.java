@@ -54,11 +54,15 @@ public class UserService {
         if (isExistId(userDto.getUserId())) {
             throw new FashionServerException(ErrorCode.valueOf("USER_INSERT_DUPLICATE_ERROR").getMessage(), 601);
         } else {
+
             joinPossibleDate = userMapper.getJoinPossibleDate(userDto.getUserId());
             logger.info("joinPossibleDate : " + joinPossibleDate);
-            if (userMapper.isJoinPossible(userDto.getUserId(), joinPossibleDate) == 1) {
-                logger.debug("탈퇴날짜 기준으로 30일 이내로 재가입 불가");
-                throw new FashionServerException(ErrorCode.USER_NOT_AUTHORIZED_ERROR.getMessage(), 603);
+            if(joinPossibleDate != null){
+                logger.debug("첫 가입");
+                if (userMapper.isJoinPossible(userDto.getUserId(), joinPossibleDate) == 1) {
+                    logger.debug("탈퇴날짜 기준으로 30일 이내로 재가입 불가");
+                    throw new FashionServerException(ErrorCode.USER_NOT_AUTHORIZED_ERROR.getMessage(), 603);
+                }
             }
             userDto.setPassword(encrypt.hashPassword(userDto.getPassword()));
             userDto.setPhoneNumber(userDto.getPhoneNumber());
@@ -74,7 +78,6 @@ public class UserService {
                             throw new NullPointerException("존재하지 않는 회원 타입입니다.");
                         }
                     });
-            // DB 가 끊김.
             userMapper.signUp(userDto);
             result = userMapper.readUserInfo(userDto.getUserId());
         }

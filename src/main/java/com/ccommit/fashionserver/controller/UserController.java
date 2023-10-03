@@ -51,7 +51,7 @@ public class UserController {
      * 아래의 @PostMapping("")와 동일. Post일 경우 간결하게 원하면 지금처럼 작성하면 된다.
      */
     @PostMapping("/sign-up")
-    public ResponseEntity<CommonResponse<UserDto>> signUp(@Valid UserDto userDto) {
+    public ResponseEntity<CommonResponse<UserDto>> signUp(@Valid @RequestBody UserDto userDto) {
         logger.debug("Sign Up Start");
         UserDto userDtoResult = userService.signUp(userDto);
         CommonResponse<UserDto> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", userDto.getUserId() + "님 정상적으로 가입되었습니다.", userDtoResult);
@@ -77,7 +77,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<CommonResponse<UserDto>> login(UserDto userDto, HttpSession session) {
+    public ResponseEntity<CommonResponse<UserDto>> login(@RequestBody UserDto userDto, HttpSession session) {
         if (StringUtils.isBlank(userDto.getUserId()) || StringUtils.isBlank(userDto.getPassword())) {
             throw new NullPointerException("빈 값이 존재합니다. 확인해주세요.");
         }

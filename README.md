@@ -68,7 +68,7 @@ https://ovenapp.io/view/fGQCAoA4y8tBMSce9LzDsoBdZJoOjoKU/ROoSh
 - 결제 완료 상품만 목록 조회해서 주문 완료 상태 변경
 
 ### 판매자
-- 상품 등록, 변경
+- 상품 등록, 변경, 삭제
 - 상품 정보(상품 명, 수량, 가격, 상세 페이지 등)
 
 ## ERD(Entity Relationship Diagram)

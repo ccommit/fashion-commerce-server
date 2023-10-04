@@ -54,7 +54,7 @@ public class ProductController {
 
     @PostMapping("")
     @LoginCheck(types = LoginCheck.UserType.SELLER)
-    public ResponseEntity<CommonResponse<ProductDto>> insertProduct(Integer loginSession, @PathVariable("userId") int userId, @Valid @RequestBody ProductDto productDto) {
+    public ResponseEntity<CommonResponse<ProductDto>> insertProduct(Integer loginSession, @Valid @RequestBody ProductDto productDto) {
         productService.insertProduct(loginSession, productDto);
         CommonResponse<ProductDto> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "상품 등록 성공", productDto);
         return ResponseEntity.ok(response);
@@ -73,5 +73,4 @@ public class ProductController {
     public void deleteProduct(Integer loginSession, int id) {
         productService.deleteProduct(id);
     }
-
 }

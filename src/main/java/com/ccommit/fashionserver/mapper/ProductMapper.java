@@ -27,4 +27,5 @@ public interface ProductMapper {
 
     List<ProductDto> getProductList(int categoryId, String searchType);
 
+    int deleteProduct(int id);
 }

@@ -3,11 +3,9 @@ package com.ccommit.fashionserver.service;
 import com.ccommit.fashionserver.dto.CategoryType;
 import com.ccommit.fashionserver.dto.ProductDto;
 import com.ccommit.fashionserver.dto.SearchType;
+import com.ccommit.fashionserver.exception.FashionServerException;
 import com.ccommit.fashionserver.mapper.ProductMapper;
-import com.ccommit.fashionserver.utils.ResultMessage;
 import lombok.extern.log4j.Log4j2;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -43,9 +41,10 @@ public class ProductService {
                 break;
             }
         }
-        if (categoryId == 0)
-            throw new IllegalArgumentException("존재하지 않는 카테고리입니다.");
-
+        if (categoryId == 0) {
+            log.debug("존재하지 않는 카테고리입니다.");
+            throw new FashionServerException("CATEGORY_NOT_USING_ERROR", 605);
+        }
         searchType = searchType.toUpperCase();
         for (SearchType search : SearchType.values()) {
             if (searchType.equals(search.getName())) {
@@ -55,40 +54,59 @@ public class ProductService {
         }
         log.info("categoryId = " + categoryId + ", searchType = " + searchType);
         List<ProductDto> productDtoList = productMapper.getProductList(categoryId, searchType);
+        if (productDtoList == null)
+            throw new FashionServerException("PRODUCT_NOT_USING_ERROR", 613);
         return productDtoList;
     }
 
-    public String isResultMessage(int result) {
-        if (result == ResultMessage.FAIL.getCode())
-            return ResultMessage.FAIL.getMessage();
-        else
-            return ResultMessage.SUCCESS.getMessage();
+    public ProductDto detailProduct(int id) {
+        ProductDto productDto = productMapper.detailProduct(id);
+        if (productDto == null)
+            throw new FashionServerException("PRODUCT_NOT_USING_ERROR", 613);
+        return productDto;
     }
 
-    public String insertProduct(ProductDto productDto) {
+    public void insertProduct(Integer loginSession, ProductDto productDto) {
+        ProductDto resultProductDto = new ProductDto();
         Arrays.stream(CategoryType.values())
                 .filter(categoryType -> productDto.getCategoryId() == categoryType.getNumber())
                 .forEach(categoryType -> {
                     if (productDto.getCategoryId() == categoryType.getNumber()) {
                         productDto.setCategoryId(categoryType.getNumber());
                     } else {
-                        throw new IllegalArgumentException("존재하지 않는 카테고리입니다.");
+                        log.debug("존재하지 않는 카테고리입니다.");
+                        throw new FashionServerException("CATEGORY_NOT_USING_ERROR", 605);
                     }
                 });
+        productDto.setSaleId(loginSession);
         int result = productMapper.insertProduct(productDto);
-        String resultMessage = isResultMessage(result);
-        return resultMessage;
+        if (result == 0)
+            throw new FashionServerException("PRODUCT_INSERT_ERROR", 610);
     }
 
-    public String updateProduct(ProductDto productDto) {
+    public ProductDto updateProduct(Integer loginSession, ProductDto productDto) {
+        ProductDto resultProductDto = new ProductDto();
+        productDto.setSaleId(loginSession);
+        if (productMapper.detailProduct(productDto.getId()) == null) {
+            log.debug("존재하지 않는 상품입니다.");
+            throw new FashionServerException("PRODUCT_NOT_USING_ERROR", 613);
+        }
         int result = productMapper.updateProduct(productDto);
-        String resultMessage = isResultMessage(result);
-        return resultMessage;
+        if (result == 0)
+            throw new FashionServerException("PRODUCT_UPDATE_ERROR", 611);
+        else
+            return resultProductDto = productMapper.detailProduct(productDto.getId());
     }
 
-    public ProductDto detailProduct(int id) {
-        ProductDto productDto = productMapper.detailProduct(id);
-        return productDto;
+    public void deleteProduct(int id) {
+        if (productMapper.detailProduct(id) == null) {
+            log.debug("존재하지 않는 상품입니다.");
+            throw new FashionServerException("PRODUCT_NOT_USING_ERROR", 613);
+        }
+        int result = productMapper.deleteProduct(id);
+        if (result == 0) {
+            log.debug("상품 삭제에 실패하였습니다.");
+            throw new FashionServerException("PRODUCT_DELETE_ERROR", 612);
+        }
     }
-
 }

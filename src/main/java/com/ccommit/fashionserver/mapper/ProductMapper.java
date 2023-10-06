@@ -23,7 +23,7 @@ public interface ProductMapper {
 
     int updateProduct(ProductDto productDto);
 
-    ProductDto detailProduct(int id);
+    ProductDto getDetailProduct(int productId);
 
     List<ProductDto> getProductList(int categoryId, String searchType);
 

@@ -72,10 +72,11 @@
                 category_id,
                 like_count,
                 brand_name,
+                sale_id,
                 create_date,
                 update_date
         FROM products
-        WHERE id = #{id}
+        WHERE id = #{productId}
     </select>
 
     <delete id="deleteProduct" parameterType="int">

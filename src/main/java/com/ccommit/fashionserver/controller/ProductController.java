@@ -44,10 +44,10 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/detail")
+    @GetMapping("/detail/{productId}")
     @LoginCheck(types = {LoginCheck.UserType.USER, LoginCheck.UserType.SELLER, LoginCheck.UserType.ADMIN})
-    public ResponseEntity<CommonResponse<ProductDto>> getProductDetail(Integer loginSession, int id) {
-        ProductDto resultProductDto = productService.detailProduct(id);
+    public ResponseEntity<CommonResponse<ProductDto>> getProductDetail(Integer loginSession, @PathVariable("productId") int productId) {
+        ProductDto resultProductDto = productService.getDetailProduct(productId);
         CommonResponse<ProductDto> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "상품 상세 조회 성공", resultProductDto);
         return ResponseEntity.ok(response);
     }

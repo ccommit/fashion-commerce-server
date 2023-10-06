@@ -59,8 +59,8 @@ public class ProductService {
         return productDtoList;
     }
 
-    public ProductDto detailProduct(int id) {
-        ProductDto productDto = productMapper.detailProduct(id);
+    public ProductDto getDetailProduct(int productId) {
+        ProductDto productDto = productMapper.getDetailProduct(productId);
         if (productDto == null)
             throw new FashionServerException("PRODUCT_NOT_USING_ERROR", 613);
         return productDto;
@@ -87,7 +87,7 @@ public class ProductService {
     public ProductDto updateProduct(Integer loginSession, ProductDto productDto) {
         ProductDto resultProductDto = new ProductDto();
         productDto.setSaleId(loginSession);
-        if (productMapper.detailProduct(productDto.getId()) == null) {
+        if (productMapper.getDetailProduct(productDto.getId()) == null) {
             log.debug("존재하지 않는 상품입니다.");
             throw new FashionServerException("PRODUCT_NOT_USING_ERROR", 613);
         }
@@ -95,11 +95,11 @@ public class ProductService {
         if (result == 0)
             throw new FashionServerException("PRODUCT_UPDATE_ERROR", 611);
         else
-            return resultProductDto = productMapper.detailProduct(productDto.getId());
+            return resultProductDto = productMapper.getDetailProduct(productDto.getId());
     }
 
     public void deleteProduct(int id) {
-        if (productMapper.detailProduct(id) == null) {
+        if (productMapper.getDetailProduct(id) == null) {
             log.debug("존재하지 않는 상품입니다.");
             throw new FashionServerException("PRODUCT_NOT_USING_ERROR", 613);
         }

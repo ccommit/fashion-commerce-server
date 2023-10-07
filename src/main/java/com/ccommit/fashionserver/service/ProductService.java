@@ -35,6 +35,11 @@ public class ProductService {
 
     public List<ProductDto> getProductList(String categoryName, String searchType) {
         int categoryId = 0;
+        String searchTypeTemp = "";
+        if (categoryName == null)
+            categoryName = "전체";
+        int categoryAllNumber = CategoryType.ALL.getNumber();
+
         for (CategoryType categoryType : CategoryType.values()) {
             if (categoryName.equals(categoryType.getName())) {
                 categoryId = categoryType.getNumber();
@@ -48,12 +53,13 @@ public class ProductService {
         searchType = searchType.toUpperCase();
         for (SearchType search : SearchType.values()) {
             if (searchType.equals(search.getName())) {
-                searchType = search.getName();
+                searchTypeTemp = search.getName();
                 break;
             }
         }
-        log.info("categoryId = " + categoryId + ", searchType = " + searchType);
-        List<ProductDto> productDtoList = productMapper.getProductList(categoryId, searchType);
+        if (searchTypeTemp.equals("") || searchTypeTemp == null)
+            throw new FashionServerException("SEARCH_TYPE_NOT_USING_ERROR", 621);
+        List<ProductDto> productDtoList = productMapper.getProductList(categoryId, searchTypeTemp, categoryAllNumber);
         if (productDtoList == null)
             throw new FashionServerException("PRODUCT_NOT_USING_ERROR", 613);
         return productDtoList;

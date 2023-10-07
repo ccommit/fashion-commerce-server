@@ -25,7 +25,7 @@ public interface ProductMapper {
 
     ProductDto getDetailProduct(int productId);
 
-    List<ProductDto> getProductList(int categoryId, String searchType);
+    List<ProductDto> getProductList(int categoryId, String searchType, int categoryAllNumber);
 
     int deleteProduct(int id);
 }

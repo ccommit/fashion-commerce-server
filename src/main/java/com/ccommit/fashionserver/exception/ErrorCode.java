@@ -26,6 +26,7 @@ public enum ErrorCode {
     PRODUCT_NOT_USING_ERROR(613, "상품 정보가 존재하지 않습니다. 확인해주세요."),
 
     CATEGORY_NOT_USING_ERROR(620,  "존재하지 않는 카테고리입니다."),
+    SEARCH_TYPE_NOT_USING_ERROR(621,  "존재하지 않는 검색 타입입니다."),
 
     INPUT_NULL_ERROR(666, "입력값이 없습니다. 확인해주세요.")
     ;

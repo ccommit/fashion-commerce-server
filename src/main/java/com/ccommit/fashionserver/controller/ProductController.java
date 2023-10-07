@@ -37,14 +37,13 @@ public class ProductController {
 
     @GetMapping("/list")
     @LoginCheck(types = {LoginCheck.UserType.USER, LoginCheck.UserType.SELLER, LoginCheck.UserType.ADMIN})
-    public ResponseEntity<CommonResponse<List<ProductDto>>> getProductList(Integer loginSession, @PathVariable("userId") int userId, String categoryName, String searchType) {
-        categoryName = "전체";
+    public ResponseEntity<CommonResponse<List<ProductDto>>> getProductList(Integer loginSession, String categoryName, String searchType) {
         List<ProductDto> resultProductDtoList = (List<ProductDto>) productService.getProductList(categoryName, searchType);
         CommonResponse<List<ProductDto>> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "상품 목록 조회 성공", resultProductDtoList);
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/detail/{productId}")
+    @GetMapping("/{productId}")
     @LoginCheck(types = {LoginCheck.UserType.USER, LoginCheck.UserType.SELLER, LoginCheck.UserType.ADMIN})
     public ResponseEntity<CommonResponse<ProductDto>> getProductDetail(Integer loginSession, @PathVariable("productId") int productId) {
         ProductDto resultProductDto = productService.getDetailProduct(productId);

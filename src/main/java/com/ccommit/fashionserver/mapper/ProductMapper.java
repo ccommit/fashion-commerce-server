@@ -23,9 +23,9 @@ public interface ProductMapper {
 
     int updateProduct(ProductDto productDto);
 
-    ProductDto detailProduct(int id);
+    ProductDto getDetailProduct(int productId);
 
-    List<ProductDto> listProduct();
+    List<ProductDto> getProductList(int categoryId, String searchType, int categoryAllNumber);
 
-    List<ProductDto> sortProduct(int categoryId, String searchType);
+    int deleteProduct(int id);
 }

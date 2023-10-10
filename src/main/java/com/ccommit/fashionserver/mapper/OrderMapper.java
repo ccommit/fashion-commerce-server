@@ -21,8 +21,9 @@ import java.util.List;
 public interface OrderMapper {
     int insertOrder(OrderDto orderDto);
 
-    // TODO: 주문조회
     List<ResponseOrder> getUserOrderList(int userId);
 
     OrderDto getUserOrder(int a);
+
+    int updateSaleQuantity(int resultQuantity, int productId);
 }

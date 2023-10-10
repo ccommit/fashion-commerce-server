@@ -2,10 +2,12 @@ package com.ccommit.fashionserver.controller;
 
 import com.ccommit.fashionserver.dto.OrderDto;
 import com.ccommit.fashionserver.dto.ProductDto;
+import com.ccommit.fashionserver.dto.ResponseOrder;
 import com.ccommit.fashionserver.service.OrderService;
 import com.ccommit.fashionserver.service.ProductService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.log4j.Log4j2;
+import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -50,6 +52,12 @@ public class OrderController {
             }
         }
         OrderDto orderDto = orderService.insertOrder(userId, orderProductIdList);
+        return orderDto;
+    }
+
+    @GetMapping("/list/{userId}")
+    public List<ResponseOrder> getUserOrderList(Integer loginSession, @PathVariable("userId") int userId) throws ParseException, JsonProcessingException {
+        List<ResponseOrder> orderDto = orderService.getUserOrderList(userId);
         return orderDto;
     }
 

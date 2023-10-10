@@ -3,9 +3,7 @@ package com.ccommit.fashionserver.dto;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-
-import javax.validation.constraints.NotBlank;
-import java.sql.Date;
+import lombok.ToString;
 
 /**
  * packageName    : com.ccommit.fashionserver.dto
@@ -20,13 +18,11 @@ import java.sql.Date;
  */
 @Getter
 @Setter
+@ToString
 @Builder
 public class ProductInfoDto {
     private int id;                 // 상품번호
-    @NotBlank
     private String name;            // 상품명
-    @NotBlank
     private String saleQuantity;    // 판매수량
-    @NotBlank
     private String price;           // 가격
 }

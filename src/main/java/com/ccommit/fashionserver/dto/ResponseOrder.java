@@ -23,7 +23,6 @@ import java.util.List;
 @ToString
 public class ResponseOrder {
     private int id;             // 주문번호
-    private String quantity;    // 수량
     private String totalPrice;  // 총금액
     private int status;         // 주문상태
     private int paymentId;      // 결제번호

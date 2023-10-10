@@ -43,5 +43,9 @@
         WHERE id = #{id}
     </select>
 
+    <update id="updateSaleQuantity" parameterType="String">
+        UPDATE products SET sale_quantity = #{resultQuantity}
+        WHERE id = #{id}
+    </update>
 
 </mapper>

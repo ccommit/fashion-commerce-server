@@ -12,5 +12,17 @@ package com.ccommit.fashionserver.dto;
  * 2023-08-23        juoiy       최초 생성
  */
 public enum UserType {
-    USER, SELLER, ADMIN
+    USER("USER"),
+    SELLER("SELLER"),
+    ADMIN("ADMIN");
+
+    private final String name;
+
+    UserType(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
 }

@@ -2,6 +2,7 @@ package com.ccommit.fashionserver.dto;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.json.simple.JSONObject;
 
 import javax.validation.constraints.NotBlank;
 import java.sql.Date;
@@ -19,7 +20,7 @@ import java.sql.Date;
  */
 @Getter
 @Setter
-public class ProductDto {
+public class ProductDto extends JSONObject {
     private int id;                 // 상품번호
     @NotBlank
     private String name;            // 상품명

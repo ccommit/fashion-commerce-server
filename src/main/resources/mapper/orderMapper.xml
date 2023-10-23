@@ -27,6 +27,7 @@
         user_id
         FROM orders
         WHERE user_id = #{userId}
+        ORDER BY id DESC
     </select>
 
     <select id="getUserOrder" resultType="com.ccommit.fashionserver.dto.OrderDto">
@@ -43,9 +44,10 @@
         WHERE id = #{id}
     </select>
 
-    <update id="updateSaleQuantity" parameterType="String">
-        UPDATE products SET sale_quantity = #{resultQuantity}
-        WHERE id = #{id}
+    <update id="updateSaleQuantity" parameterType="int">
+        UPDATE products
+        SET sale_quantity = #{resultQuantity}
+        WHERE id = #{productId}
     </update>
 
 </mapper>

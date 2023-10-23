@@ -4,14 +4,19 @@ import com.ccommit.fashionserver.dto.OrderDto;
 import com.ccommit.fashionserver.dto.ProductDto;
 import com.ccommit.fashionserver.dto.ProductInfoDto;
 import com.ccommit.fashionserver.dto.ResponseOrder;
+import com.ccommit.fashionserver.exception.FashionServerException;
 import com.ccommit.fashionserver.mapper.OrderMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.log4j.Log4j2;
 import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.text.DecimalFormat;
@@ -37,70 +42,68 @@ public class OrderService {
     @Autowired
     private final ProductService productService;
 
+    @Autowired
+    private StringRedisTemplate redisTemplate;
+
     public OrderService(OrderMapper orderMapper, ProductService productService) {
         this.orderMapper = orderMapper;
         this.productService = productService;
     }
 
-    public OrderDto insertOrder(int userId, List<ProductDto> orderProductList) throws JsonProcessingException {
+    public OrderDto insertOrder(int userId, List<ProductDto> orderProductList, String orderType) throws JsonProcessingException, ParseException {
         DecimalFormat priceFormat = new DecimalFormat("###,###");
         OrderDto orderDto = new OrderDto();
-        ProductDto productDto = new ProductDto();
+        ObjectMapper objectMapper = new ObjectMapper();
         int orderTotalPrice = 0;
-        int index = 0;
 
         ArrayList<ProductInfoDto> productInfoDtoList = new ArrayList<>();
         for (int i = 0; i < orderProductList.size(); i++) {
-
-            int productId = orderProductList.get(i).getId();
-            String saleQuantity = orderProductList.get(i).getSaleQuantity();
-            productDto = productService.detailProduct(productId);
-            int productQuantity = Integer.parseInt(productDto.getSaleQuantity());
-
-            if (productDto == null) {
-                throw new RuntimeException("상품이 존재하지 않습니다.");
+            int orderQuantity = 0;
+            int productId = (int) orderProductList.get(i).get("id");
+            if (orderType.equals("CART")) {
+                String cartSaleQuantity = (String) orderProductList.get(i).get("sale_quantity");
+                orderQuantity = Integer.parseInt(cartSaleQuantity);
             } else {
-                int orderQuantity = Integer.parseInt(saleQuantity); // 주문수량
-                if (productQuantity < 1 || productQuantity < orderQuantity)
-                    throw new RuntimeException("상품의 수량이 부족합니다. 확인해주세요.");
-
-                // 여기서부터 주문가능 로직
-                // 상품수량에서 주문수량 차감
-                int resultQuantity = productQuantity - orderQuantity;
-                //productQuantity -= orderQuantity; // 상품수량 - 주문수량
-                // 차감수량만큼 상품수량 업데이트
-                log.info("주문수량: " + orderQuantity + " - 상품수량: " + productQuantity + " = 차감결과수량: " + resultQuantity);
-                int updateResult = orderMapper.updateSaleQuantity(resultQuantity, productId);
-                if (updateResult == 0)
-                    throw new RuntimeException("상품수량 업데이트에 실패하였습니다. 다시 시도해주세요.");
-
-                int orderPrice = orderQuantity * Integer.parseInt(productDto.getPrice().replace(",", ""));
-                orderTotalPrice += orderPrice;
-                log.info("productId: " + productId + ", saleQuantity: " + saleQuantity + ",price: " + Integer.parseInt(productDto.getPrice().replace(",", ""))
-                        + ", orderPrice: " + orderPrice + ", orderTotalPrice: " + orderTotalPrice);
-
-                ProductInfoDto productInfoDto = ProductInfoDto.builder()
-                        .id(orderProductList.get(i).getId())
-                        .saleQuantity(orderProductList.get(i).getSaleQuantity())
-                        .name(orderProductList.get(i).getName())
-                        .price(orderProductList.get(i).getPrice())
-                        .build();
-                productInfoDtoList.add(productInfoDto);
-                index++;
+                orderQuantity = Integer.parseInt((String) orderProductList.get(i).get("saleQuantity")); // 주문수량
             }
+
+            ProductDto productDto = productService.getDetailProduct(productId);
+            String productName = (String) productDto.get("name");
+            int productQuantity = Integer.parseInt((String) productDto.get("sale_quantity"));
+            String productPrice = (String) productDto.get("price");
+            productPrice = productPrice.replace(",", "");
+            if (productQuantity < 1 || productQuantity < orderQuantity)
+                throw new FashionServerException("PRODUCT_QUANTITY_NOT_ENOUGH_ERROR", 614);
+
+            int resultQuantity = productQuantity - orderQuantity;
+            log.info("상품수량 - 주문수량 = 차감결과수량 : " + productQuantity + " - " + orderQuantity + " = " + resultQuantity);
+
+            int updateResult = orderMapper.updateSaleQuantity(resultQuantity, productId);
+            if (updateResult == 0)
+                throw new FashionServerException("PRODUCT_UPDATE_ERROR", 611);
+
+            int orderPrice = orderQuantity * Integer.parseInt(productPrice);
+            orderTotalPrice += orderPrice;
+            log.info("productId: " + productId + ", orderQuantity: " + orderQuantity + ",price: " + Integer.parseInt(productPrice)
+                    + ", orderPrice: " + orderPrice + ", orderTotalPrice: " + orderTotalPrice);
+            ProductInfoDto productInfoDto = ProductInfoDto.builder()
+                    .id(productId)
+                    .saleQuantity(String.valueOf(orderQuantity))
+                    .name(productName)
+                    .price(productPrice)
+                    .build();
+            productInfoDtoList.add(productInfoDto);
         }
         orderDto.setTotalPrice(((priceFormat.format(orderTotalPrice))));
-        ObjectMapper objectMapper = new ObjectMapper();
         String json = objectMapper.writeValueAsString(productInfoDtoList);
         orderDto.setProductInfo(json);
         orderDto.setUserId(userId);
-        //orderMapper.insertOrder(orderDto);
+        orderMapper.insertOrder(orderDto);
         int resultOrderId = orderDto.getId();
         return orderMapper.getUserOrder(resultOrderId);
     }
 
-    //@Cacheable(value = "order", key = "#orderId")
-    public List<ResponseOrder> getUserOrderList(int userId) throws ParseException, JsonProcessingException {
+    public List<ResponseOrder> getUserOrderList(int userId) throws ParseException {
         List<ResponseOrder> responseOrders = orderMapper.getUserOrderList(userId);
         for (int i = 0; i < responseOrders.size(); i++) {
             JSONParser jsonParser = new JSONParser();
@@ -113,5 +116,40 @@ public class OrderService {
         return responseOrders;
     }
 
+    @Cacheable(cacheNames = "cartList", key = "#userId + #orderProductList.hashCode()", unless = "#result == null")
+    public List<ProductDto> putCartList(int userId, List<ProductDto> orderProductList) {
+        List<ProductDto> productDtoList = new ArrayList<>();
+        for (int i = 0; i < orderProductList.size(); i++) {
+            ProductDto productDto = productService.getDetailProduct((Integer) orderProductList.get(i).get("id"));
+            productDto.put("sale_quantity", orderProductList.get(i).get("saleQuantity"));
+            productDtoList.add(productDto);
+        }
+        return productDtoList;
+    }
 
+    public List<ProductDto> getCartList(int userId, List<ProductDto> orderProductList) throws ParseException {
+        String redisKey = "cartList::" + (userId + orderProductList.hashCode());
+        String redisValue = redisTemplate.opsForValue().get(redisKey);
+        if (redisValue == null) {
+            log.debug("장바구니에 담긴 상품이 없습니다.");
+            throw new FashionServerException("CART_PRODUCT_NOT_USING_ERROR", 640);
+        }
+        JSONParser jsonParser = new JSONParser();
+        JSONArray jsonArray = (JSONArray) jsonParser.parse(redisValue);
+        List<ProductDto> productDtoList = new ArrayList<>();
+        List<ProductDto> jsonArrayProduct = (List<ProductDto>) jsonArray.get(1);
+        for (int i = 0; i < jsonArrayProduct.size(); i++) {
+            JSONObject jsonObject = (JSONObject) jsonArrayProduct.get(i);
+            int productId = Integer.parseInt(String.valueOf(jsonObject.get("id")));
+            ProductDto productDto = productService.getDetailProduct(productId);
+            productDto.put("sale_quantity", orderProductList.get(i).get("saleQuantity"));
+            productDtoList.add(productDto);
+        }
+        return productDtoList;
+    }
+
+    @CacheEvict(cacheNames = "cartList", key = "#userId + #orderProductList.hashCode()")
+    public void deleteCartList(int userId, List<ProductDto> orderProductList) {
+        log.info("장바구니 상품 삭제");
+    }
 }

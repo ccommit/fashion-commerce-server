@@ -3,20 +3,20 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ccommit.fashionserver.mapper.OrderMapper">
-
     <insert id="insertOrder" parameterType="com.ccommit.fashionserver.dto.OrderDto" useGeneratedKeys="true"
             keyProperty="id">
-        INSERT INTO orders (total_price, status, payment_id, create_date,
+        INSERT INTO orders (order_number, total_price, status, payment_id, create_date,
         shipping_status, product_info, user_id)
-        VALUES (#{totalPrice}, #{status}, #{paymentId}, now(),
+        VALUES (#{orderNumber}, #{totalPrice}, #{status}, #{paymentId}, now(),
         #{shippingStatus}, #{productInfo}, #{userId})
         <selectKey keyProperty="id" resultType="int" order="AFTER">
             SELECT LAST_INSERT_ID()
         </selectKey>
     </insert>
 
-    <select id="getUserOrderList" resultType="com.ccommit.fashionserver.dto.ResponseOrder">
+    <select id="getUserOrderList" resultType="com.ccommit.fashionserver.dto.OrderDto">
         SELECT id,
+        order_number,
         total_price,
         status,
         payment_id,
@@ -30,8 +30,15 @@
         ORDER BY id DESC
     </select>
 
+    <select id="isExistOrderNumber" resultType="int">
+        SELECT COUNT(order_number)
+        FROM orders
+        WHERE order_number = #{orderNumber}
+    </select>
+
     <select id="getUserOrder" resultType="com.ccommit.fashionserver.dto.OrderDto">
         SELECT id,
+        order_number,
         total_price,
         status,
         payment_id,
@@ -41,7 +48,7 @@
         product_info,
         user_id
         FROM orders
-        WHERE id = #{id}
+        WHERE order_number = #{orderNumber}
     </select>
 
     <update id="updateSaleQuantity" parameterType="int">

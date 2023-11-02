@@ -4,7 +4,7 @@ import com.ccommit.fashionserver.aop.CommonResponse;
 import com.ccommit.fashionserver.aop.LoginCheck;
 import com.ccommit.fashionserver.dto.OrderDto;
 import com.ccommit.fashionserver.dto.ProductDto;
-import com.ccommit.fashionserver.dto.ResponseOrder;
+import com.ccommit.fashionserver.exception.ErrorCode;
 import com.ccommit.fashionserver.exception.FashionServerException;
 import com.ccommit.fashionserver.service.OrderService;
 import com.ccommit.fashionserver.service.ProductService;
@@ -12,7 +12,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.log4j.Log4j2;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -49,21 +48,20 @@ public class OrderController {
     }
 
     @LoginCheck(types = LoginCheck.UserType.USER)
-    @PostMapping("/{userId}")
-    public ResponseEntity<CommonResponse<OrderDto>> insertOrder(Integer loginSession, @PathVariable("userId") int userId, @RequestBody List<ProductDto> orderProductIdList) throws JsonProcessingException, ParseException {
-        if (orderProductIdList.size() == 0)
-            throw new FashionServerException("PRODUCT_NOT_USING_ERROR", 613);
-        final String orderType = "ORDER";
-        OrderDto orderDto = orderService.insertOrder(userId, orderProductIdList, orderType);
+    @PostMapping("")
+    public ResponseEntity<CommonResponse<OrderDto>> insertOrder(Integer loginSession, @RequestBody ProductDto orderProductList) throws JsonProcessingException {
+        if (orderProductList.getProductDtoList().size() == 0 || orderProductList.getProductDtoList() == null)
+            throw new FashionServerException(ErrorCode.valueOf("PRODUCT_NOT_USING_ERROR").getMessage(), 613);
+        OrderDto orderDto = orderService.insertOrder(loginSession, orderProductList);
         CommonResponse<OrderDto> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "상품 주문에 성공하였습니다.", orderDto);
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/list/{userId}")
+    @GetMapping("/list")
     @LoginCheck(types = LoginCheck.UserType.USER)
-    public ResponseEntity<CommonResponse<List<ResponseOrder>>> getUserOrderList(Integer loginSession, @PathVariable("userId") int userId) throws ParseException {
-        List<ResponseOrder> orderDto = orderService.getUserOrderList(userId);
-        CommonResponse<List<ResponseOrder>> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "주문 목록 조회에 성공하였습니다.", orderDto);
+    public ResponseEntity<CommonResponse<List<OrderDto>>> getUserOrderList(Integer loginSession) throws ParseException {
+        List<OrderDto> orderDto = orderService.getUserOrderList(loginSession);
+        CommonResponse<List<OrderDto>> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "주문 목록 조회에 성공하였습니다.", orderDto);
         return ResponseEntity.ok(response);
     }
 
@@ -73,42 +71,41 @@ public class OrderController {
 
     }
 
-    @GetMapping("/cart/{userId}")
+    @GetMapping("/carts")
     @LoginCheck(types = LoginCheck.UserType.USER)
-    public ResponseEntity<CommonResponse<List<ProductDto>>> putCartList(Integer loginSession, @PathVariable("userId") int userId, @RequestBody List<ProductDto> orderProductList) {
-        List<ProductDto> productDtoList = orderService.putCartList(userId, orderProductList);
+    public ResponseEntity<CommonResponse<List<ProductDto>>> putCartList(Integer loginSession, @RequestBody ProductDto orderProductList) {
+        if (orderProductList.getProductDtoList().size() == 0 || orderProductList.getProductDtoList() == null)
+            throw new FashionServerException(ErrorCode.valueOf("PRODUCT_NOT_USING_ERROR").getMessage(), 613);
+        List<ProductDto> productDtoList = orderService.putCartList(loginSession, orderProductList);
         CommonResponse<List<ProductDto>> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "장바구니에 상품 담기 성공", productDtoList);
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/cart/list/{userId}")
+    @GetMapping("/carts/list")
     @LoginCheck(types = LoginCheck.UserType.USER)
-    public ResponseEntity<CommonResponse<List<ProductDto>>> getCartList(Integer loginSession, @PathVariable("userId") int userId, @RequestBody List<ProductDto> orderProductList) throws ParseException, java.text.ParseException {
-        List<ProductDto> productDtoList = orderService.getCartList(userId, orderProductList);
+    public ResponseEntity<CommonResponse<List<ProductDto>>> getCartList(Integer loginSession) throws ParseException {
+        List<ProductDto> productDtoList = orderService.getCartList(loginSession);
         CommonResponse<List<ProductDto>> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "장바구니 목록 조회 성공", productDtoList);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/cart/order/{userId}")
+    @PostMapping("/carts/order")
     @LoginCheck(types = LoginCheck.UserType.USER)
-    @CacheEvict(cacheNames = "cartList", key = "#userId + #orderProductList.hashCode()", beforeInvocation = false)
-    public ResponseEntity<CommonResponse<OrderDto>> cartOrder(Integer loginSession, @PathVariable("userId") int userId, @RequestBody List<ProductDto> orderProductList) throws ParseException, JsonProcessingException, java.text.ParseException {
-        List<ProductDto> productDtoList = orderService.getCartList(userId, orderProductList);
-        log.info("productDtoList2 : " + productDtoList.size());
-        log.info("장바구니 상품 구매 start");
-        String orderType = "CART";
-        OrderDto orderDto = orderService.insertOrder(userId, productDtoList, orderType);
+    public ResponseEntity<CommonResponse<OrderDto>> cartOrder(Integer loginSession) throws ParseException, JsonProcessingException {
+        List<ProductDto> productDtoList = orderService.getCartList(loginSession);
+        ProductDto orderProductDtoList = new ProductDto();
+        orderProductDtoList.setProductDtoList(productDtoList);
+        OrderDto orderDto = orderService.insertOrder(loginSession, orderProductDtoList);
+        redisTemplate.delete("cartList::" + loginSession);
         CommonResponse<OrderDto> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "장바구니 상품 구매 성공하였습니다.", orderDto);
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/cart/delete/{userId}")
+    @GetMapping("/carts/delete")
     @LoginCheck(types = LoginCheck.UserType.USER)
-    public ResponseEntity<CommonResponse<String>> deleteCartList(@PathVariable("userId") int userId, @RequestBody List<ProductDto> orderProductList) {
-        orderService.deleteCartList(userId, orderProductList);
+    public ResponseEntity<CommonResponse<String>> deleteCartList(Integer LoginSession) {
+        orderService.deleteCartList(LoginSession);
         CommonResponse<String> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "장바구니 상품 삭제에 성공하였습니다.", null);
         return ResponseEntity.ok(response);
     }
-
-
 }

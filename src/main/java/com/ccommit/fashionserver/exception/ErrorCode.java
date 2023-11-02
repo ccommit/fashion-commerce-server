@@ -32,12 +32,11 @@ public enum ErrorCode {
 
     ORDER_INSERT_ERROR(630, "주문 등록에 실패하였습니다."),
     ORDER_NUMBER_DUPLICATION_ERROR(631, "주문번호가 중복되었습니다. 다시 시도해주세요."),
+    ORDER_NOT_USING_ERROR(632, "주문 정보가 존재하지 않습니다."),
 
     CART_PRODUCT_NOT_USING_ERROR(640, "장바구니에 담긴 상품이 존재하지 않습니다. 확인해주세요."),
 
-    INPUT_NULL_ERROR(999, "필수 입력값이 없습니다. 확인해주세요."),
-
-    NOT_AUTHORIZED_ERROR(777, "권한이 없습니다.");
+    INPUT_NULL_ERROR(999, "필수 입력값이 없습니다. 확인해주세요.");
 
     // 에러 코드의 '코드 상태'을 반환한다.
     private final int status;

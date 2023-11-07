@@ -36,6 +36,12 @@ public enum ErrorCode {
 
     CART_PRODUCT_NOT_USING_ERROR(640, "장바구니에 담긴 상품이 존재하지 않습니다. 확인해주세요."),
 
+    CARD_PAYMENT_SUCCESS_ERROR(650, "카드 결제에 실패하였습니다. 다시 시도해주세요.(토스페이먼츠 API 확인바람)"),
+    CARD_PAYMENT_INSERT_ERROR(651, "결제 정보 등록에 실패하였습니다. 확인해주세요."),
+    CARD_PAYMENT_UPDATE_ERROR(652, "결제 정보 수정에 실패하였습니다. 확인해주세요."),
+    CARD_PAYMENT_SELECT_ERROR(653, "결제 정보 조회에 실패하였습니다. 다시 시도해주세요."),
+
+
     INPUT_NULL_ERROR(999, "필수 입력값이 없습니다. 확인해주세요.");
 
     // 에러 코드의 '코드 상태'을 반환한다.

@@ -16,11 +16,10 @@ import org.json.simple.JSONObject;
  */
 @Getter
 @Setter
-@Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class PaymentRes {
+public class PaymentResponse {
     private String paymentKey;      //결제 키값
     private String orderId;         //주문번호
     private String orderName;       //주문 상품 이름

@@ -3,7 +3,6 @@ package com.ccommit.fashionserver.aop;
 import com.ccommit.fashionserver.exception.ErrorCode;
 import com.ccommit.fashionserver.exception.FashionServerException;
 import com.ccommit.fashionserver.utils.SessionUtils;
-import lombok.extern.log4j.Log4j2;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -27,7 +26,6 @@ import javax.servlet.http.HttpSession;
  */
 @Aspect
 @Component
-@Log4j2
 public class LoginCheckAspect {
     @Around("@annotation(com.ccommit.fashionserver.aop.LoginCheck) && @annotation(loginCheck)")
     public Object LoginSessionCheck(ProceedingJoinPoint proceedingJoinPoint, LoginCheck loginCheck) throws Throwable {
@@ -39,25 +37,22 @@ public class LoginCheckAspect {
             if (isLoginCheck == false) {
                 switch (loginCheck.types()[i].toString()) {
                     case "USER":
-                        try {
-                            id = SessionUtils.getUserLoginSession(session);
-                        } catch (NullPointerException e) {
+                        if (SessionUtils.getUserLoginSession(session) == null)
                             isLoginCheck = false;
-                        }
+                        else
+                            id = SessionUtils.getUserLoginSession(session);
                         break;
                     case "SELLER":
-                        try {
-                            id = SessionUtils.getSellerLoginSession(session);
-                        } catch (NullPointerException e) {
+                        if (SessionUtils.getSellerLoginSession(session) == null)
                             isLoginCheck = false;
-                        }
+                        else
+                            id = SessionUtils.getSellerLoginSession(session);
                         break;
                     case "ADMIN":
-                        try {
-                            id = SessionUtils.getAdminLoginSession(session);
-                        } catch (NullPointerException e) {
+                        if (SessionUtils.getAdminLoginSession(session) == null)
                             isLoginCheck = false;
-                        }
+                        else
+                            id = SessionUtils.getAdminLoginSession(session);
                         break;
                 }
                 if (id != 0)

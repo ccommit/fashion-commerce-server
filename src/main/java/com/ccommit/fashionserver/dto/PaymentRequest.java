@@ -1,7 +1,6 @@
 package com.ccommit.fashionserver.dto;
 
 import lombok.*;
-import org.json.simple.JSONObject;
 
 /**
  * packageName    : com.ccommit.fashionserver.dto
@@ -19,7 +18,7 @@ import org.json.simple.JSONObject;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class PaymentReq {
+public class PaymentRequest {
     private int amount;    //결제 금액
     private String orderId; // 주문ID
     private String orderName; // 주문명 (필수, 최대 100자, ex. 생수 외 1건)

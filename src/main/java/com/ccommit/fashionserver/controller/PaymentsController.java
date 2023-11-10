@@ -2,10 +2,9 @@ package com.ccommit.fashionserver.controller;
 
 import com.ccommit.fashionserver.aop.CommonResponse;
 import com.ccommit.fashionserver.aop.LoginCheck;
-import com.ccommit.fashionserver.config.TossPaymentConfig;
 import com.ccommit.fashionserver.dto.PaymentDto;
-import com.ccommit.fashionserver.dto.PaymentReq;
-import com.ccommit.fashionserver.dto.PaymentRes;
+import com.ccommit.fashionserver.dto.PaymentRequest;
+import com.ccommit.fashionserver.dto.PaymentResponse;
 import com.ccommit.fashionserver.exception.ErrorCode;
 import com.ccommit.fashionserver.exception.FashionServerException;
 import com.ccommit.fashionserver.service.PaymentService;
@@ -33,37 +32,33 @@ public class PaymentsController {
     @Autowired
     private final PaymentService paymentService;
 
-    @Autowired
-    private final TossPaymentConfig tossPaymentConfig;
-
-    public PaymentsController(PaymentService paymentService, TossPaymentConfig tossPaymentConfig) {
+    public PaymentsController(PaymentService paymentService) {
         this.paymentService = paymentService;
-        this.tossPaymentConfig = tossPaymentConfig;
     }
 
-    @PostMapping("/key-in")
+    @PostMapping("/card-payment")
     @LoginCheck(types = LoginCheck.UserType.USER)
-    public ResponseEntity<CommonResponse<PaymentRes>> cardPaymentKeyIn(Integer loginSession, @RequestBody PaymentReq paymentReq) {
-        PaymentRes result = paymentService.cardPayment(paymentReq);
-        CommonResponse<PaymentRes> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "카드결제가 성공하였습니다.", result);
+    public ResponseEntity<CommonResponse<PaymentResponse>> insertCardPayment(Integer loginSession, @RequestBody PaymentRequest paymentRequest) {
+        PaymentResponse result = paymentService.insertCardPayment(paymentRequest);
+        CommonResponse<PaymentResponse> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "카드결제가 성공하였습니다.", result);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{orderId}")
     @LoginCheck(types = LoginCheck.UserType.USER)
-    public ResponseEntity<CommonResponse<PaymentRes>> getPaymentHistory(Integer loginSession, @PathVariable("orderId") String orderId) {
-        PaymentRes result = paymentService.getPaymentHistory(orderId);
-        CommonResponse<PaymentRes> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "카드결제 조회에 성공하였습니다.", result);
+    public ResponseEntity<CommonResponse<PaymentResponse>> getPaymentHistory(Integer loginSession, @PathVariable("orderId") String orderId) {
+        PaymentResponse result = paymentService.getPaymentHistory(orderId);
+        CommonResponse<PaymentResponse> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "카드결제 조회에 성공하였습니다.", result);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/cancel")
+    @PatchMapping("/cancel")
     @LoginCheck(types = LoginCheck.UserType.USER)
-    public ResponseEntity<CommonResponse<PaymentRes>> paymentCancel(Integer loginSession, @RequestBody PaymentDto paymentDto) {
+    public ResponseEntity<CommonResponse<PaymentResponse>> paymentCancel(Integer loginSession, @RequestBody PaymentDto paymentDto) {
         if (paymentDto.getPaymentKey() == null || paymentDto.getCancelReason() == null)
             throw new FashionServerException(ErrorCode.valueOf("INPUT_NULL_ERROR").getMessage(), 999);
         paymentService.paymentCancel(paymentDto);
-        CommonResponse<PaymentRes> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "결제 취소가 되었습니다.", null);
+        CommonResponse<PaymentResponse> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "결제 취소가 되었습니다.", null);
         return ResponseEntity.ok(response);
     }
 

@@ -4,7 +4,6 @@ import lombok.*;
 
 import javax.validation.constraints.NotBlank;
 import java.sql.Date;
-import java.util.List;
 
 /**
  * packageName    : com.ccommit.fashionserver.dto
@@ -35,6 +34,4 @@ public class ProductDto {
     private int saleId;             // 판매자아이디
     private Date createDate;        // 등록일
     private Date updateDate;        // 수정일
-    private List<ProductDto> productDtoList;
-
 }

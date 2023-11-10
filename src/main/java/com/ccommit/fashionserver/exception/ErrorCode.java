@@ -29,6 +29,7 @@ public enum ErrorCode {
 
     CATEGORY_NOT_USING_ERROR(620, "존재하지 않는 카테고리입니다."),
     SEARCH_TYPE_NOT_USING_ERROR(621, "존재하지 않는 검색 타입입니다."),
+    SEARCH_TYPE_NULL_ERROR(622, "검색 타입을 입력 후 다시 시도해주세요."),
 
     ORDER_INSERT_ERROR(630, "주문 등록에 실패하였습니다."),
     ORDER_NUMBER_DUPLICATION_ERROR(631, "주문번호가 중복되었습니다. 다시 시도해주세요."),
@@ -41,6 +42,7 @@ public enum ErrorCode {
     CARD_PAYMENT_UPDATE_ERROR(652, "결제 정보 수정에 실패하였습니다. 확인해주세요."),
     CARD_PAYMENT_SELECT_ERROR(653, "결제 정보 조회에 실패하였습니다. 다시 시도해주세요."),
 
+    HTTP_SERVER_ERROR(660, "토스페이먼츠에 요청 중 문제가 발생하였습니다.(토스페이먼츠 응답코드를 확인바람)"),
 
     INPUT_NULL_ERROR(999, "필수 입력값이 없습니다. 확인해주세요.");
 

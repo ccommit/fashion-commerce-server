@@ -7,6 +7,7 @@ import com.ccommit.fashionserver.exception.ErrorCode;
 import com.ccommit.fashionserver.exception.FashionServerException;
 import com.ccommit.fashionserver.mapper.ProductMapper;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -38,9 +39,7 @@ public class ProductService {
         int categoryId = 0;
         String searchTypeTemp = "";
         if (categoryName == null)
-            categoryName = "전체";
-        if (searchType.equals("") || searchType == null)
-            throw new FashionServerException(ErrorCode.valueOf("SEARCH_TYPE_NOT_USING_ERROR").getMessage(), 621);
+            categoryName = CategoryType.ALL.getName();
         int categoryAllNumber = CategoryType.ALL.getNumber();
         for (CategoryType categoryType : CategoryType.values()) {
             if (categoryName.equals(categoryType.getName())) {
@@ -59,6 +58,8 @@ public class ProductService {
                 break;
             }
         }
+        if (StringUtils.isBlank(searchTypeTemp))
+            throw new FashionServerException(ErrorCode.valueOf("SEARCH_TYPE_NOT_USING_ERROR").getMessage(), 621);
         List<ProductDto> productDtoList = productMapper.getProductList(categoryId, searchTypeTemp, categoryAllNumber);
         if (productDtoList == null)
             throw new FashionServerException(ErrorCode.valueOf("PRODUCT_NOT_USING_ERROR").getMessage(), 613);

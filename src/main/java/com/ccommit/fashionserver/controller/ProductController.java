@@ -3,8 +3,7 @@ package com.ccommit.fashionserver.controller;
 import com.ccommit.fashionserver.aop.CommonResponse;
 import com.ccommit.fashionserver.aop.LoginCheck;
 import com.ccommit.fashionserver.dto.ProductDto;
-import com.ccommit.fashionserver.exception.ErrorCode;
-import com.ccommit.fashionserver.exception.FashionServerException;
+import com.ccommit.fashionserver.dto.SearchType;
 import com.ccommit.fashionserver.service.ProductService;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
@@ -42,7 +41,7 @@ public class ProductController {
     @LoginCheck(types = {LoginCheck.UserType.USER, LoginCheck.UserType.SELLER, LoginCheck.UserType.ADMIN})
     public ResponseEntity<CommonResponse<List<ProductDto>>> getProductList(Integer loginSession, String categoryName, String searchType) {
         if (StringUtils.isBlank(searchType))
-            throw new FashionServerException(ErrorCode.valueOf("INPUT_NULL_ERROR").getMessage(), 999);
+            searchType = SearchType.NEW.getName();
         List<ProductDto> resultProductDtoList = (List<ProductDto>) productService.getProductList(categoryName, searchType);
         CommonResponse<List<ProductDto>> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "상품 목록 조회 성공", resultProductDtoList);
         return ResponseEntity.ok(response);

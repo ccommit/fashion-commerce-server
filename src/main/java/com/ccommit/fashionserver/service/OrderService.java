@@ -3,6 +3,7 @@ package com.ccommit.fashionserver.service;
 import com.ccommit.fashionserver.dto.OrderDto;
 import com.ccommit.fashionserver.dto.ProductDto;
 import com.ccommit.fashionserver.dto.ProductInfoDto;
+import com.ccommit.fashionserver.dto.RequestProductDto;
 import com.ccommit.fashionserver.exception.ErrorCode;
 import com.ccommit.fashionserver.exception.FashionServerException;
 import com.ccommit.fashionserver.mapper.OrderMapper;
@@ -16,6 +17,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -51,7 +53,7 @@ public class OrderService {
         this.redisTemplate = redisTemplate;
     }
 
-    public OrderDto insertOrder(int userId, ProductDto orderProductList) throws JsonProcessingException {
+    public OrderDto insertOrder(int userId, RequestProductDto orderProductList) throws JsonProcessingException {
         OrderDto orderDto = new OrderDto();
         ObjectMapper objectMapper = new ObjectMapper();
         int orderTotalPrice = 0;
@@ -110,14 +112,25 @@ public class OrderService {
         return responseOrders;
     }
 
-    @Cacheable(cacheNames = "cartList", key = "#userId")
-    public List<ProductDto> putCartList(int userId, ProductDto orderProductList) {
+    public List<ProductDto> getDetailProductInfo(RequestProductDto orderProductList) {
         List<ProductDto> productDtoList = new ArrayList<>();
         for (int i = 0; i < orderProductList.getProductDtoList().size(); i++) {
             ProductDto productDto = productService.getDetailProduct(orderProductList.getProductDtoList().get(i).getId());
             productDto.setSaleQuantity(orderProductList.getProductDtoList().get(i).getSaleQuantity());
             productDtoList.add(productDto);
         }
+        return productDtoList;
+    }
+
+    @Cacheable(cacheNames = "cartList", key = "#userId")
+    public List<ProductDto> addCartList(int userId, RequestProductDto orderProductList) {
+        List<ProductDto> productDtoList = getDetailProductInfo(orderProductList);
+        return productDtoList;
+    }
+
+    @CachePut(cacheNames = "cartList", key = "#userId")
+    public List<ProductDto> putCartList(int userId, RequestProductDto orderProductList) {
+        List<ProductDto> productDtoList = getDetailProductInfo(orderProductList);
         return productDtoList;
     }
 
@@ -140,8 +153,14 @@ public class OrderService {
         return productDtoList;
     }
 
-    @CacheEvict(cacheNames = "cartList", key = "#userId", beforeInvocation = true)
-    public void deleteCartList(int userId) {
-        log.debug("장바구니 상품 삭제");
+    @CacheEvict(cacheNames = "cartList", key = "#userId", beforeInvocation = false)
+    public OrderDto cartOrder(int userId) throws ParseException, JsonProcessingException {
+        List<ProductDto> productDtoList = getCartList(userId);
+        RequestProductDto requestProductDto = new RequestProductDto();
+        requestProductDto.setProductDtoList(productDtoList);
+        OrderDto orderDto = insertOrder(userId, requestProductDto);
+        return orderDto;
     }
+
+
 }

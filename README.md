@@ -74,7 +74,8 @@ https://ovenapp.io/view/fGQCAoA4y8tBMSce9LzDsoBdZJoOjoKU/ROoSh
 - 상품 정보(상품 명, 수량, 가격, 상세 페이지 등)
 
 ## ERD(Entity Relationship Diagram)
-![FashionTable_20230823_214802](https://github.com/ccommit/fashion-commerce-server/assets/44775069/e25fa413-b61e-4f90-87e0-d20ca935598f)
+![FashionTable_20231111_215720](https://github.com/ccommit/fashion-commerce-server/assets/44775069/d92b1aea-51b1-4769-9397-fa2c9be845d4)
+
 
 
 ## 시퀀스 다이어그램

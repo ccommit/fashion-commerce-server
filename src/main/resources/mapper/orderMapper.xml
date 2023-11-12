@@ -5,9 +5,9 @@
 <mapper namespace="com.ccommit.fashionserver.mapper.OrderMapper">
     <insert id="insertOrder" parameterType="com.ccommit.fashionserver.dto.OrderDto" useGeneratedKeys="true"
             keyProperty="id">
-        INSERT INTO orders (order_number, total_price, status, payment_id, create_date,
+        INSERT INTO orders (order_id, total_price, status, payment_id, create_date,
         shipping_status, product_info, user_id)
-        VALUES (#{orderNumber}, #{totalPrice}, #{status}, #{paymentId}, now(),
+        VALUES (#{orderId}, #{totalPrice}, #{status}, #{paymentId}, now(),
         #{shippingStatus}, #{productInfo}, #{userId})
         <selectKey keyProperty="id" resultType="int" order="AFTER">
             SELECT LAST_INSERT_ID()
@@ -16,7 +16,7 @@
 
     <select id="getUserOrderList" resultType="com.ccommit.fashionserver.dto.OrderDto">
         SELECT id,
-        order_number,
+        order_id,
         total_price,
         status,
         payment_id,
@@ -30,15 +30,15 @@
         ORDER BY id DESC
     </select>
 
-    <select id="isExistOrderNumber" resultType="int">
-        SELECT COUNT(order_number)
+    <select id="isExistOrderId" resultType="int">
+        SELECT COUNT(order_id)
         FROM orders
-        WHERE order_number = #{orderNumber}
+        WHERE order_id = #{orderId}
     </select>
 
     <select id="getUserOrder" resultType="com.ccommit.fashionserver.dto.OrderDto">
         SELECT id,
-        order_number,
+        order_id,
         total_price,
         status,
         payment_id,
@@ -48,13 +48,43 @@
         product_info,
         user_id
         FROM orders
-        WHERE order_number = #{orderNumber}
+        WHERE order_id = #{orderId}
+        AND user_id = #{userId}
     </select>
 
     <update id="updateSaleQuantity" parameterType="int">
         UPDATE products
         SET sale_quantity = #{resultQuantity}
         WHERE id = #{productId}
+    </update>
+
+    <select id="getOrderCancelPossibleDate" resultType="String">
+        SELECT DATE_ADD(DATE_FORMAT(create_date, '%Y-%m-%d'), INTERVAL 14 DAY) as orderCancelPossibleDate
+        FROM orders
+        WHERE status = #{status}
+        and order_id = #{orderId}
+    </select>
+
+    <select id="isOrderCancelPossible" resultType="int">
+        SELECT COUNT(order_id)
+        FROM orders
+        WHERE order_id = #{orderId}
+        AND status = #{status}
+        AND DATE_FORMAT(#{orderCancelPossibleDate}, '%Y-%m-%d') > now()
+    </select>
+
+    <update id="updateOrderCancel" parameterType="com.ccommit.fashionserver.dto.OrderDto">
+        UPDATE orders
+        SET status = #{status},
+        update_date = now()
+        WHERE order_id = #{orderId}
+    </update>
+
+    <update id="updateOrderPaymentId" parameterType="com.ccommit.fashionserver.dto.OrderDto">
+        UPDATE orders
+        SET payment_id = #{paymentId},
+        update_date = now()
+        WHERE order_id = #{orderId}
     </update>
 
 </mapper>

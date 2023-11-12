@@ -3,6 +3,7 @@ package com.ccommit.fashionserver.controller;
 import com.ccommit.fashionserver.aop.CommonResponse;
 import com.ccommit.fashionserver.aop.LoginCheck;
 import com.ccommit.fashionserver.dto.OrderDto;
+import com.ccommit.fashionserver.dto.PaymentDto;
 import com.ccommit.fashionserver.dto.ProductDto;
 import com.ccommit.fashionserver.dto.RequestProductDto;
 import com.ccommit.fashionserver.exception.ErrorCode;
@@ -64,12 +65,6 @@ public class OrderController {
         return ResponseEntity.ok(response);
     }
 
-    // TODO: 주문 취소 (취소가능 조건: 상태가 주문접수,완료일 경우에만 가능하다. 결제 중 결제 완료는 환불)
-    @PatchMapping("")
-    public void cancelOrder() {
-
-    }
-
     @GetMapping("/{userId}/carts")
     @LoginCheck(types = LoginCheck.UserType.USER)
     public ResponseEntity<CommonResponse<List<ProductDto>>> addCartList(Integer loginSession, @PathVariable("userId") int userId, @RequestBody RequestProductDto orderProductList) {
@@ -111,5 +106,14 @@ public class OrderController {
         CommonResponse<OrderDto> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "장바구니 상품 구매 성공하였습니다.", orderDto);
         return ResponseEntity.ok(response);
     }
+
+    @PatchMapping("/{orderId}/cancel")
+    @LoginCheck(types = LoginCheck.UserType.USER)
+    public ResponseEntity<CommonResponse<OrderDto>> orderCancel(Integer userId, @PathVariable("orderId") String orderId, @RequestBody PaymentDto paymentDto) {
+        OrderDto orderDto = orderService.orderCancel(userId, orderId, paymentDto);
+        CommonResponse<OrderDto> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "주문번호 " + orderId + " 이 정상적으로 취소되었습니다.", orderDto);
+        return ResponseEntity.ok(response);
+    }
+
 
 }

@@ -65,21 +65,20 @@ public class PaymentService {
         try {
             responseEntity = restTemplate.exchange(uri.toString(), HttpMethod.POST, requestData, PaymentResponse.class);
         } catch (HttpClientErrorException e) {
-            throw new FashionServerException(ErrorCode.valueOf("HTTP_SERVER_ERROR").getMessage() + ", 응답코드: " + e.getStatusCode(), 660);
+            throw new FashionServerException(ErrorCode.valueOf("HTTP_SERVER_ERROR").getMessage() + ", 토스페이먼츠 응답: " + e.getMessage(), 660);
         }
 
         if (responseEntity.getStatusCodeValue() != 200) {
             throw new FashionServerException(ErrorCode.valueOf("CARD_PAYMENT_SUCCESS_ERROR").getMessage(), responseEntity.getStatusCodeValue());
         } else {
             paymentDto.setPaymentKey(responseEntity.getBody().getPaymentKey());
-            paymentDto.setCardNumber(responseEntity.getBody().getOrderId());
+            paymentDto.setOrderId(responseEntity.getBody().getOrderId());
             paymentDto.setStatus(PaymentStatus.PAYMENT_COMPLETE.getPaymentCode());
-            log.info("paymentDto : " + paymentDto.getPaymentKey());
+            paymentDto.setCardNumber(paymentRequest.getCardNumber());
             int result = paymentMapper.insertPaymentInfo(paymentDto);
             if (result == 0)
                 throw new FashionServerException(ErrorCode.valueOf("CARD_PAYMENT_INSERT_ERROR").getMessage(), 651);
         }
-        //responseEntity.getBody().setStatus(paymentDto.getStatus());
         return responseEntity.getBody();
     }
 
@@ -95,7 +94,7 @@ public class PaymentService {
         try {
             responseEntity = restTemplate.exchange(uri.toString(), HttpMethod.GET, requestData, PaymentResponse.class);
         } catch (HttpClientErrorException e) {
-            throw new FashionServerException(ErrorCode.valueOf("HTTP_SERVER_ERROR").getMessage() + ", 응답코드: " + e.getStatusCode(), 660);
+            throw new FashionServerException(ErrorCode.valueOf("HTTP_SERVER_ERROR").getMessage() + ", 토스페이먼츠 응답: " + e.getMessage(), 660);
         }
         if (responseEntity.getStatusCodeValue() != 200)
             throw new FashionServerException(ErrorCode.valueOf("CARD_PAYMENT_SELECT_ERROR").getMessage(), 653);
@@ -117,7 +116,7 @@ public class PaymentService {
         try {
             responseEntity = restTemplate.exchange(uri.toString(), HttpMethod.POST, requestData, PaymentResponse.class);
         } catch (HttpClientErrorException e) {
-            throw new FashionServerException(ErrorCode.valueOf("HTTP_SERVER_ERROR").getMessage() + ", 응답코드: " + e.getStatusCode(), 660);
+            throw new FashionServerException(ErrorCode.valueOf("HTTP_SERVER_ERROR").getMessage() + ", 토스페이먼츠 응답: " + e.getMessage(), 660);
         }
         if (responseEntity.getStatusCodeValue() == 200) {
             paymentDto.setStatus(PaymentStatus.PAYMENT_CANCEL.getPaymentCode());

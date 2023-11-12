@@ -33,6 +33,7 @@ import lombok.*;
 public class PaymentDto {
     private int id;
     private int status;
+    private String orderId;
     private String cardNumber;
     private String paymentKey;
     private String cancelReason; // 결제취소 사유

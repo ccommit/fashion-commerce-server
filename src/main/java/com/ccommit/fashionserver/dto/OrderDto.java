@@ -24,7 +24,7 @@ import java.util.List;
 @AllArgsConstructor
 public class OrderDto {
     private int id;             // 주문번호
-    private String orderNumber; // 주문번호
+    private String orderId; // 주문번호
     private int totalPrice;     // 총금액
     private int status;         // 주문상태
     private int paymentId;      // 결제번호

@@ -22,9 +22,17 @@ public interface OrderMapper {
 
     List<OrderDto> getUserOrderList(int userId);
 
-    OrderDto getUserOrder(String orderNumber);
+    OrderDto getUserOrder(String orderId, int userId);
 
     int updateSaleQuantity(int resultQuantity, int productId);
 
-    int isExistOrderNumber(String orderNumber);
+    int isExistOrderId(String orderId);
+
+    String getOrderCancelPossibleDate(int status, String orderId);
+
+    int isOrderCancelPossible(String orderId, int status, String orderCancelPossibleDate);
+
+    int updateOrderCancel(OrderDto orderDto);
+
+    int updateOrderPaymentId(OrderDto orderDto);
 }

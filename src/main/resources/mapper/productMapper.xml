@@ -5,10 +5,13 @@
 <mapper namespace="com.ccommit.fashionserver.mapper.ProductMapper">
 
     <insert id="insertProduct" parameterType="com.ccommit.fashionserver.dto.ProductDto">
-        INSERT INTO products (id, name, sale_quantity, price, category_id, brand_name,create_date,
+        INSERT INTO products (name, sale_quantity, price, category_id, brand_name, create_date,
         sale_id)
-        VALUES (#{id}, #{name}, #{saleQuantity}, #{price}, #{categoryId}, #{brandName},now(),
+        VALUES (#{name}, #{saleQuantity}, #{price}, #{categoryId}, #{brandName}, now(),
         #{saleId})
+        <selectKey keyProperty="id" resultType="int" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
     </insert>
 
     <update id="updateProduct" parameterType="com.ccommit.fashionserver.dto.ProductDto">
@@ -17,10 +20,10 @@
         <if test="name != null and !name.equals('') ">
             name = #{name},
         </if>
-        <if test="saleQuantity != null and !saleQuantity.equals('') ">
+        <if test="saleQuantity != 0">
             sale_quantity = #{saleQuantity},
         </if>
-        <if test="price != null and !price.equals('') ">
+        <if test="price != 0">
             price =  #{price},
         </if>
         <if test="categoryId != 0 and categoryId != null and !categoryId.equals('') ">

@@ -1,6 +1,5 @@
 package com.ccommit.fashionserver.service;
 
-import com.ccommit.fashionserver.controller.UserController;
 import com.ccommit.fashionserver.dto.UserDto;
 import com.ccommit.fashionserver.dto.UserType;
 import com.ccommit.fashionserver.exception.ErrorCode;
@@ -8,9 +7,8 @@ import com.ccommit.fashionserver.exception.FashionServerException;
 import com.ccommit.fashionserver.mapper.UserMapper;
 import com.ccommit.fashionserver.utils.BcryptEncoder;
 import com.ccommit.fashionserver.utils.SessionUtils;
+import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +26,7 @@ import java.util.Arrays;
  * -----------------------------------------------------------
  * 2023-07-27        juoiy       최초 생성
  */
+@Log4j2
 @Service
 public class UserService {
     @Autowired
@@ -35,8 +34,6 @@ public class UserService {
 
     @Autowired
     private final BcryptEncoder encrypt;
-
-    public static final Logger logger = LogManager.getLogger(UserController.class);
 
     public UserService(UserMapper userMapper, BcryptEncoder encrypt) {
         this.userMapper = userMapper;
@@ -56,11 +53,10 @@ public class UserService {
         } else {
 
             joinPossibleDate = userMapper.getJoinPossibleDate(userDto.getUserId());
-            logger.info("joinPossibleDate : " + joinPossibleDate);
-            if(joinPossibleDate != null){
-                logger.debug("첫 가입");
+            if (joinPossibleDate != null) {
+                log.debug("첫 가입");
                 if (userMapper.isJoinPossible(userDto.getUserId(), joinPossibleDate) == 1) {
-                    logger.debug("탈퇴날짜 기준으로 30일 이내로 재가입 불가");
+                    log.debug("탈퇴날짜 기준으로 30일 이내로 재가입 불가");
                     throw new FashionServerException(ErrorCode.USER_NOT_AUTHORIZED_ERROR.getMessage(), 603);
                 }
             }
@@ -74,7 +70,7 @@ public class UserService {
                         if (userDto.getUserType().equals(userType.getName())) {
                             userDto.setUserType(userType);
                         } else {
-                            logger.debug("존재하지 않는 회원 타입입니다.");
+                            log.debug("존재하지 않는 회원 타입입니다.");
                             throw new NullPointerException("존재하지 않는 회원 타입입니다.");
                         }
                     });
@@ -89,8 +85,10 @@ public class UserService {
     }
 
     public void userInfoUpdate(int id, UserDto userDto) {
-        if (!isExistId(userDto.getUserId())) {
-            throw new FashionServerException(ErrorCode.valueOf("USER_NOT_USING_ERROR").getMessage(), 604);
+        UserDto getUserDto = userMapper.readUserInfo(userDto.getUserId());
+        if (getUserDto == null || getUserDto.getId() != id) {
+            log.info("getUserDto : " + getUserDto + " id : " + id);
+            throw new FashionServerException(ErrorCode.valueOf("USER_UPDATE_ERROR").getMessage(), 602);
         } else {
             if (!StringUtils.isBlank(userDto.getPassword())) {
                 userDto.setPassword(encrypt.hashPassword(userDto.getPassword()));

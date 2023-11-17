@@ -28,6 +28,7 @@ public class GlobalExceptionHandler {
         CommonResponse commonResponse = new CommonResponse(HttpStatus.OK, "ERR_000", ex.getMessage(), request.getServletPath());
         return new ResponseEntity<>(commonResponse, new HttpHeaders(), commonResponse.getHttpStatus());
     }
+
     @ExceptionHandler(value = FashionServerException.class)
     private ResponseEntity<Object> handleDuplicate(FashionServerException ex, HttpServletRequest request) {
         CommonResponse commonResponse = new CommonResponse(HttpStatus.OK, ex.status.toString(), ex.getMessage(), request.getServletPath());

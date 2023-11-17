@@ -6,9 +6,8 @@ import com.ccommit.fashionserver.dto.UserDto;
 import com.ccommit.fashionserver.exception.ErrorCode;
 import com.ccommit.fashionserver.exception.FashionServerException;
 import com.ccommit.fashionserver.service.UserService;
+import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,13 +33,12 @@ import javax.validation.Valid;
  * @ResponseBody를 붙여서 JSON을 만들었지만,
  * @RestController로 쉽게 알아서 전송 가능한 문자열 만들어준다.
  */
+@Log4j2
 @RestController
 @RequestMapping("/users")
 public class UserController {
     @Autowired
     private final UserService userService;
-
-    public static final Logger logger = LogManager.getLogger(UserController.class);
 
     public UserController(UserService userService) {
         this.userService = userService;
@@ -52,7 +50,7 @@ public class UserController {
      */
     @PostMapping("/sign-up")
     public ResponseEntity<CommonResponse<UserDto>> signUp(@Valid @RequestBody UserDto userDto) {
-        logger.debug("Sign Up Start");
+        log.debug("Sign Up Start");
         UserDto userDtoResult = userService.signUp(userDto);
         CommonResponse<UserDto> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", userDto.getUserId() + "님 정상적으로 가입되었습니다.", userDtoResult);
         return ResponseEntity.ok(response);
@@ -64,7 +62,7 @@ public class UserController {
         if (loginSession != id)
             throw new FashionServerException(ErrorCode.valueOf("USER_UPDATE_ERROR").getMessage(), 602);
         userService.userWithdraw(id);
-        CommonResponse<String> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "정상적으로 탈퇴되었습니다.", null);
+        CommonResponse<String> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "정상적으로 탈퇴되었습니다.", loginSession.toString());
         return ResponseEntity.ok(response);
     }
 
@@ -78,16 +76,14 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<CommonResponse<UserDto>> login(@RequestBody UserDto userDto, HttpSession session) {
-        if (StringUtils.isBlank(userDto.getUserId()) || StringUtils.isBlank(userDto.getPassword())) {
+        if (StringUtils.isBlank(userDto.getUserId()) || StringUtils.isBlank(userDto.getPassword()))
             throw new NullPointerException("빈 값이 존재합니다. 확인해주세요.");
-        }
-        logger.debug("UserId : " + userDto.getUserId() + " Password: " + userDto.getPassword());
+        log.debug("UserId : " + userDto.getUserId() + " Password: " + userDto.getPassword());
         UserDto userInfo = userService.passwordCheck(userDto.getUserId(), userDto.getPassword());
         if (userInfo.getId() == 0 || userInfo == null)
             throw new FashionServerException(ErrorCode.valueOf("USER_NOT_USING_ERROR").getMessage(), 602);
-
         userService.insertSession(session, userInfo);
-        logger.debug("Login success = " + userInfo.getId());
+        log.debug("Login success = " + userInfo.getId());
         CommonResponse<UserDto> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", userDto.getUserId() + "회원 로그인", userInfo);
         return ResponseEntity.ok(response);
     }
@@ -97,8 +93,8 @@ public class UserController {
             , LoginCheck.UserType.ADMIN})
     public ResponseEntity<CommonResponse<String>> logout(Integer loginSession, HttpSession session) {
         userService.clearSession(session);
-        logger.debug("Logout success");
-        CommonResponse<String> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "정상적으로 로그아웃 되었습니다.", null);
+        log.debug("Logout success = " + loginSession);
+        CommonResponse<String> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "정상적으로 로그아웃 되었습니다.", loginSession.toString());
         return ResponseEntity.ok(response);
     }
 }

@@ -1,5 +1,7 @@
 package com.ccommit.fashionserver.aop;
 
+import com.ccommit.fashionserver.exception.ErrorCode;
+import com.ccommit.fashionserver.exception.FashionServerException;
 import com.ccommit.fashionserver.utils.SessionUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -35,22 +37,30 @@ public class LoginCheckAspect {
             if (isLoginCheck == false) {
                 switch (loginCheck.types()[i].toString()) {
                     case "USER":
-                        id = SessionUtils.getUserLoginSession(session);
+                        if (SessionUtils.getUserLoginSession(session) == null)
+                            isLoginCheck = false;
+                        else
+                            id = SessionUtils.getUserLoginSession(session);
                         break;
                     case "SELLER":
-                        id = SessionUtils.getSellerLoginSession(session);
+                        if (SessionUtils.getSellerLoginSession(session) == null)
+                            isLoginCheck = false;
+                        else
+                            id = SessionUtils.getSellerLoginSession(session);
                         break;
                     case "ADMIN":
-                        id = SessionUtils.getAdminLoginSession(session);
+                        if (SessionUtils.getAdminLoginSession(session) == null)
+                            isLoginCheck = false;
+                        else
+                            id = SessionUtils.getAdminLoginSession(session);
                         break;
                 }
                 if (id != 0)
                     isLoginCheck = true;
             }
         }
-        if (isLoginCheck == false) {
-            throw new Exception("로그인이 필요합니다.");
-        }
+        if (isLoginCheck == false)
+            throw new FashionServerException(ErrorCode.valueOf("LOGIN_ERROR").getMessage(), 605);
         Object[] modifiedArgs = proceedingJoinPoint.getArgs();
         if (proceedingJoinPoint.getArgs() != null)
             modifiedArgs[index] = id;

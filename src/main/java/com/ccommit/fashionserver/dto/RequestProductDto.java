@@ -2,26 +2,24 @@ package com.ccommit.fashionserver.dto;
 
 import lombok.*;
 
+import java.util.List;
+
 /**
  * packageName    : com.ccommit.fashionserver.dto
- * fileName       : ProductDto
+ * fileName       : RequestProductDto
  * author         : juoiy
- * date           : 2023-08-24
+ * date           : 2023-11-08
  * description    :
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2023-08-24        juoiy       최초 생성
+ * 2023-11-08        juoiy       최초 생성
  */
 @Getter
 @Setter
-@ToString
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
-public class ProductInfoDto {
-    private int id;                 // 상품번호
-    private String name;            // 상품명
-    private int saleQuantity;    // 판매수량
-    private int price;           // 가격
+@AllArgsConstructor
+public class RequestProductDto {
+    private List<ProductDto> productDtoList;
 }

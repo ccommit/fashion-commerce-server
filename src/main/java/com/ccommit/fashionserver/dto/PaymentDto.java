@@ -36,6 +36,8 @@ public class PaymentDto {
     private String orderId;
     private String cardNumber;
     private String paymentKey;
-    private String cancelReason; // 결제취소 사유
+    private String cancelReason;
+    private String successUrl;
+    private String failUrl;
 
 }

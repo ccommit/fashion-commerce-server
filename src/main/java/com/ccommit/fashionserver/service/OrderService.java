@@ -59,29 +59,44 @@ public class OrderService {
         this.redisTemplate = redisTemplate;
     }
 
+    // 상품 재고 체크 유효성 검사
+    public Boolean productQuantityCheck(int productQuantity, int orderQuantity) {
+        Boolean isProductQuantity = false;
+        if (productQuantity < 1 || productQuantity < orderQuantity)
+            throw new FashionServerException(ErrorCode.valueOf("PRODUCT_QUANTITY_NOT_ENOUGH_ERROR").getMessage(), 614);
+        else
+            isProductQuantity = true;
+        return isProductQuantity;
+    }
+
     public OrderDto insertOrder(int userId, RequestProductDto orderProductList) throws JsonProcessingException {
         OrderDto orderDto = new OrderDto();
         ObjectMapper objectMapper = new ObjectMapper();
-        int orderTotalPrice = 0;
         ArrayList<ProductInfoDto> productInfoDtoList = new ArrayList<>();
+        int orderTotalPrice = 0;
+        final int LENGTH = 20; // 주문번호 길이 제한
+        String orderId = RandomStringUtils.randomAlphanumeric(LENGTH); // 주문번호 생성
+
         for (int i = 0; i < orderProductList.getProductDtoList().size(); i++) {
+
             ProductDto productDto = productService.getDetailProduct(orderProductList.getProductDtoList().get(i).getId());
             int productQuantity = productDto.getSaleQuantity();
             int orderQuantity = orderProductList.getProductDtoList().get(i).getSaleQuantity();
-            if (productQuantity < 1 || productQuantity < orderQuantity)
-                throw new FashionServerException(ErrorCode.valueOf("PRODUCT_QUANTITY_NOT_ENOUGH_ERROR").getMessage(), 614);
 
-            int resultQuantity = productQuantity - orderQuantity;
-            log.debug("상품수량 - 주문수량 = 차감결과수량 : " + productQuantity + " - " + orderQuantity + " = " + resultQuantity);
+            if (productQuantityCheck(productQuantity, orderQuantity)) {
+                int resultQuantity = productQuantity - orderQuantity;
+                log.debug("상품수량 - 주문수량 = 차감결과수량 : " + productQuantity + " - " + orderQuantity + " = " + resultQuantity);
 
-            int updateResult = orderMapper.updateSaleQuantity(resultQuantity, orderProductList.getProductDtoList().get(i).getId());
-            if (updateResult == 0)
-                throw new FashionServerException(ErrorCode.valueOf("PRODUCT_UPDATE_ERROR").getMessage(), 611);
+                int updateResult = orderMapper.updateSaleQuantity(resultQuantity, orderProductList.getProductDtoList().get(i).getId());
+                if (updateResult == 0)
+                    throw new FashionServerException(ErrorCode.valueOf("PRODUCT_UPDATE_ERROR").getMessage(), 611);
+            }
 
-            int orderPrice = orderQuantity * (productDto.getPrice());
+            int orderPrice = orderQuantity * productDto.getPrice(); // 주문금액 = 주문수량 * 상품금액
             orderTotalPrice += orderPrice;
             log.debug("productId: " + productDto.getId() + ", orderQuantity: " + orderQuantity + ",price: " + productDto.getPrice()
                     + ", orderPrice: " + orderPrice + ", orderTotalPrice: " + orderTotalPrice);
+
             ProductInfoDto productInfoDto = ProductInfoDto.builder()
                     .id(productDto.getId())
                     .saleQuantity(orderQuantity)
@@ -89,37 +104,36 @@ public class OrderService {
                     .price(productDto.getPrice())
                     .build();
             productInfoDtoList.add(productInfoDto);
+        }//for end
 
-        }
-        String orderName = productInfoDtoList.get(0).getName() + " 외 " + (orderProductList.getProductDtoList().size() - 1) + "개";
+        StringBuilder orderName = new StringBuilder();
+        orderName.append(productInfoDtoList.get(0).getName() + " 외 ");
+        orderName.append((orderProductList.getProductDtoList().size() - 1) + "개");
         orderDto.setTotalPrice(orderTotalPrice);
         orderDto.setStatus(OrderStatus.ORDER_COMPLETION.getStatus());
         String json = objectMapper.writeValueAsString(productInfoDtoList);
         orderDto.setProductInfo(json);
         orderDto.setUserId(userId);
-        final int LENGTH = 20; // 주문번호 길이 제한
-        String orderId = RandomStringUtils.randomAlphanumeric(LENGTH);
         orderDto.setOrderId(orderId);
-        int isExistOrderId = orderMapper.isExistOrderId(orderDto.getOrderId());
-        if (isExistOrderId != 0)
+
+        if (orderMapper.isExistOrderId(orderDto.getOrderId()) != 0)
             throw new FashionServerException(ErrorCode.valueOf("ORDER_ID_DUPLICATION_ERROR").getMessage(), 631);
-        int insertResult = orderMapper.insertOrder(orderDto);
-        if (insertResult == 0)
+        if (orderMapper.insertOrder(orderDto) == 0)
             throw new FashionServerException(ErrorCode.valueOf("ORDER_INSERT_ERROR").getMessage(), 630);
-        // 카드결제 API START
-        PaymentRequest paymentRequest = new PaymentRequest();
-        paymentRequest.setAmount(orderDto.getTotalPrice());
-        paymentRequest.setCardExpirationMonth("06");
-        paymentRequest.setCardExpirationYear("25");
-        paymentRequest.setCardNumber("5388032333580235");
-        paymentRequest.setCustomerIdentityNumber("950609");
-        paymentRequest.setOrderId(orderDto.getOrderId());
-        paymentRequest.setOrderName(orderName);
-        paymentService.insertCardPayment(paymentRequest);
-        int paymentId = paymentMapper.getPaymentInfo(orderDto.getOrderId()).getId();
-        orderDto.setPaymentId(paymentId);
-        if (orderMapper.updateOrderPaymentId(orderDto) == 0)
-            throw new FashionServerException(ErrorCode.valueOf("ORDER_UPDATE_ERROR").getMessage(), 636);
+
+        TossPaymentRequest tossPaymentRequest = TossPaymentRequest.builder()
+                .orderNo(orderId)
+                .amount(orderTotalPrice)
+                .productDesc(orderName.toString())
+                .build();
+        paymentService.createPayment(tossPaymentRequest);
+        // 토스 카드 결제 시 디비에서 조회
+/*        int paymentId = paymentMapper.getPaymentInfo(orderDto.getOrderId()).getId();
+        orderDto.setPaymentId(paymentId); // 결제번호 셋팅
+
+        if (orderMapper.updateOrderPaymentId(orderDto) == 0) // 결제테이블 결제번호를 주문테이블에 추가(UPDATE)
+            throw new FashionServerException(ErrorCode.valueOf("ORDER_UPDATE_ERROR").getMessage(), 636);*/
+
         return orderMapper.getUserOrder(orderDto.getOrderId(), orderDto.getUserId());
     }
 
@@ -203,14 +217,16 @@ public class OrderService {
         paymentDtoInto.setCancelReason(paymentDto.getCancelReason());
         // 토스페이먼츠 결제 취소 API : START
         PaymentResponse paymentResponse = paymentService.paymentCancel(paymentDtoInto);
-        OrderDto orderDto = new OrderDto();
-        orderDto.setStatus(OrderStatus.ORDER_CANCEL.getStatus());
-        orderDto.setOrderId(orderId);
+        OrderDto orderDto = OrderDto.builder()
+                .status(OrderStatus.ORDER_CANCEL.getStatus())
+                .orderId(orderId).build();
+        /*orderDto.setStatus(OrderStatus.ORDER_CANCEL.getStatus());
+        orderDto.setOrderId(orderId);*/
         int updateResult = orderMapper.updateOrderCancel(orderDto);
         if (updateResult == 0)
             throw new FashionServerException(ErrorCode.valueOf("ORDER_CANCEL_UPDATE_ERROR").getMessage(), 635);
         // TODO: 취소 시 상품재고 복원
+
         return orderMapper.getUserOrder(orderDto.getOrderId(), orderDto.getUserId());
     }
-
 }

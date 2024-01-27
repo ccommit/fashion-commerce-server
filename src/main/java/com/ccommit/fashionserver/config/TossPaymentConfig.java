@@ -22,9 +22,18 @@ public class TossPaymentConfig {
     private String clientApiKey;
     @Value("${payment.toss.test_secrete_api_key}")
     private String secretKey;
-    @Value("${payment.toss.payment_url}")
-    private String tossPaymentUrl;
+    @Value("${payment.toss.test_secrete_v2_api_key}")
+    private String v2SecretKey;
     @Value("${payment.toss.payment_api_key}")
     private String tossPaymentApiKey;
+    @Value("${payment.toss.payment_url}")
+    private String tossPaymentUrl;
+    //v2_payment_url
+    @Value("${payment.toss.v2_payment_url}")
+    private String tossV2PaymentUrl;
+    @Value("${payment.toss.success_url}")
+    private String successUrl;
+    @Value("${payment.toss.fail_url}")
+    private String failUrl;
 
 }

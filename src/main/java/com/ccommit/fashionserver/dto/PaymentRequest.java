@@ -24,6 +24,8 @@ public class PaymentRequest {
     private String orderName; // 주문명 (필수, 최대 100자, ex. 생수 외 1건)
     private String customerName; //구매자 명
     private String paymentKey;
+    private String successUrl;
+    private String failUrl;
 
     // 카드결제에 필요한 Request Body 파라미터
     private String cardNumber; //카드번호(필수, 최대 20자)

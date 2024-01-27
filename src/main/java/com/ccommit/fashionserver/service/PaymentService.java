@@ -1,10 +1,7 @@
 package com.ccommit.fashionserver.service;
 
 import com.ccommit.fashionserver.config.TossPaymentConfig;
-import com.ccommit.fashionserver.dto.PaymentDto;
-import com.ccommit.fashionserver.dto.PaymentRequest;
-import com.ccommit.fashionserver.dto.PaymentResponse;
-import com.ccommit.fashionserver.dto.PaymentStatus;
+import com.ccommit.fashionserver.dto.*;
 import com.ccommit.fashionserver.exception.ErrorCode;
 import com.ccommit.fashionserver.exception.FashionServerException;
 import com.ccommit.fashionserver.mapper.PaymentMapper;
@@ -18,6 +15,7 @@ import org.springframework.web.client.RestTemplate;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * packageName    : com.ccommit.fashionserver.service
@@ -43,87 +41,74 @@ public class PaymentService {
         this.paymentMapper = paymentMapper;
     }
 
-    public PaymentResponse insertCardPayment(PaymentRequest paymentRequest) {
+    private HttpHeaders getHeader() {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
         httpHeaders.add("Authorization", tossPaymentConfig.getTossPaymentApiKey());
-
-        PaymentDto paymentDto = new PaymentDto();
-        Map<String, Object> params = new HashMap<>();
-        params.put("amount", paymentRequest.getAmount());
-        params.put("cardExpirationMonth", paymentRequest.getCardExpirationMonth());
-        params.put("cardExpirationYear", paymentRequest.getCardExpirationYear());
-        params.put("cardNumber", paymentRequest.getCardNumber());
-        params.put("customerIdentityNumber", paymentRequest.getCustomerIdentityNumber());
-        params.put("orderId", paymentRequest.getOrderId());
-        params.put("orderName", paymentRequest.getOrderName());
-
-        HttpEntity<Map<String, Object>> requestData = new HttpEntity<>(params, httpHeaders);
-        RestTemplate restTemplate = new RestTemplate();
-        URI uri = URI.create(tossPaymentConfig.getTossPaymentUrl() + "/key-in");
-        ResponseEntity<PaymentResponse> responseEntity;
-        try {
-            responseEntity = restTemplate.exchange(uri.toString(), HttpMethod.POST, requestData, PaymentResponse.class);
-        } catch (HttpClientErrorException e) {
-            throw new FashionServerException(ErrorCode.valueOf("HTTP_SERVER_ERROR").getMessage() + ", 토스페이먼츠 응답: " + e.getMessage(), 660);
-        }
-
-        if (responseEntity.getStatusCodeValue() != 200) {
-            throw new FashionServerException(ErrorCode.valueOf("CARD_PAYMENT_SUCCESS_ERROR").getMessage(), responseEntity.getStatusCodeValue());
-        } else {
-            paymentDto.setPaymentKey(responseEntity.getBody().getPaymentKey());
-            paymentDto.setOrderId(responseEntity.getBody().getOrderId());
-            paymentDto.setStatus(PaymentStatus.PAYMENT_COMPLETE.getPaymentCode());
-            paymentDto.setCardNumber(paymentRequest.getCardNumber());
-            int result = paymentMapper.insertPaymentInfo(paymentDto);
-            if (result == 0)
-                throw new FashionServerException(ErrorCode.valueOf("CARD_PAYMENT_INSERT_ERROR").getMessage(), 651);
-        }
-        return responseEntity.getBody();
+        return httpHeaders;
     }
 
-    public PaymentResponse getPaymentHistory(String orderId) {
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-        httpHeaders.add("Authorization", tossPaymentConfig.getTossPaymentApiKey());
-
-        HttpEntity<String> requestData = new HttpEntity<>(httpHeaders);
+    public TossPaymentResponse createPayment(TossPaymentRequest tossPaymentRequest) {
+        HttpHeaders httpHeaders = getHeader();
         RestTemplate restTemplate = new RestTemplate();
-        URI uri = URI.create(tossPaymentConfig.getTossPaymentUrl() + "/orders/" + orderId);
-        ResponseEntity<PaymentResponse> responseEntity;
-        try {
-            responseEntity = restTemplate.exchange(uri.toString(), HttpMethod.GET, requestData, PaymentResponse.class);
-        } catch (HttpClientErrorException e) {
-            throw new FashionServerException(ErrorCode.valueOf("HTTP_SERVER_ERROR").getMessage() + ", 토스페이먼츠 응답: " + e.getMessage(), 660);
-        }
-        if (responseEntity.getStatusCodeValue() != 200)
-            throw new FashionServerException(ErrorCode.valueOf("CARD_PAYMENT_SELECT_ERROR").getMessage(), 653);
-        return responseEntity.getBody();
-    }
-
-    public PaymentResponse paymentCancel(PaymentDto paymentDto) {
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-        httpHeaders.add("Authorization", tossPaymentConfig.getTossPaymentApiKey());
+        String uuid = UUID.randomUUID().toString();
+        String orderId = uuid.replaceAll("-", "").substring(0, 10);
 
         Map<String, Object> params = new HashMap<>();
-        params.put("cancelReason", paymentDto.getCancelReason());
+        params.put("orderNo", tossPaymentRequest.getOrderNo());
+        params.put("amount", tossPaymentRequest.getAmount());
+        params.put("amountTaxFree", 0);
+        params.put("productDesc", tossPaymentRequest.getProductDesc());
+        params.put("apiKey", tossPaymentConfig.getV2SecretKey());
+        params.put("retUrl", tossPaymentConfig.getSuccessUrl());
+        params.put("retCancelUrl", tossPaymentConfig.getFailUrl());
+        params.put("autoExecute", false);
 
         HttpEntity<Map<String, Object>> requestData = new HttpEntity<>(params, httpHeaders);
-        RestTemplate restTemplate = new RestTemplate();
-        URI uri = URI.create(tossPaymentConfig.getTossPaymentUrl() + "/" + paymentDto.getPaymentKey() + "/cancel");
-        ResponseEntity<PaymentResponse> responseEntity;
-        try {
-            responseEntity = restTemplate.exchange(uri.toString(), HttpMethod.POST, requestData, PaymentResponse.class);
-        } catch (HttpClientErrorException e) {
+        URI uri = URI.create(tossPaymentConfig.getTossV2PaymentUrl() +"/payments");
+        ResponseEntity<TossPaymentResponse> responseEntity ;
+
+        try{
+            responseEntity = restTemplate.exchange(uri.toString(), HttpMethod.POST, requestData, TossPaymentResponse.class);
+            log.info("토큰키 : "+responseEntity.getBody().getPayToken());
+        }catch (HttpClientErrorException e){
             throw new FashionServerException(ErrorCode.valueOf("HTTP_SERVER_ERROR").getMessage() + ", 토스페이먼츠 응답: " + e.getMessage(), 660);
-        }
-        if (responseEntity.getStatusCodeValue() == 200) {
-            paymentDto.setStatus(PaymentStatus.PAYMENT_CANCEL.getPaymentCode());
-            int result = paymentMapper.updatePaymentCancel(paymentDto);
-            if (result == 0)
-                throw new FashionServerException(ErrorCode.valueOf("CARD_PAYMENT_UPDATE_ERROR").getMessage(), 652);
         }
         return responseEntity.getBody();
     }
+
+    //TODO: 테스트
+    public TossPaymentResponse approvePayment(String orderNo) {
+        /** execute ( 결제 생성-인증-인증완 을 알려준다 ) */
+        HttpHeaders httpHeaders = getHeader();
+        Map<String, Object> params = new HashMap<>();
+
+        params.put("apiKey", tossPaymentConfig.getV2SecretKey());
+        params.put("payToken", orderNo);
+        HttpEntity<Map<String, Object>> requestData = new HttpEntity<>(params, httpHeaders);
+
+        RestTemplate restTemplate = new RestTemplate();
+        URI uri = URI.create(tossPaymentConfig.getTossV2PaymentUrl() + "/execute");
+        ResponseEntity<TossPaymentResponse> responseEntity;
+        try {
+            responseEntity = restTemplate.exchange(uri.toString(), HttpMethod.POST, requestData, TossPaymentResponse.class);
+        } catch (HttpClientErrorException e) {
+            throw new FashionServerException(ErrorCode.valueOf("HTTP_SERVER_ERROR").getMessage() + ", 토스페이먼츠 응답: " + e.getMessage(), 660);
+        }
+        return responseEntity.getBody();
+    }
+    //TODO: 환불하기
+    public TossPaymentResponse refundsPayment(TossPaymentRequest tossPaymentRequest){
+        TossPaymentResponse tossPaymentResponse = new TossPaymentResponse();
+
+        return tossPaymentResponse;
+    }
+
+    //TODO: 결제 조회
+    public TossPaymentResponse selectPayment(TossPaymentRequest tossPaymentRequest){
+        TossPaymentResponse tossPaymentResponse = new TossPaymentResponse();
+
+        return tossPaymentResponse;
+    }
+
 }

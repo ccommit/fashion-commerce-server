@@ -216,7 +216,7 @@ public class OrderService {
             throw new FashionServerException(ErrorCode.valueOf("PAYMENT_NOT_USING_ERROR").getMessage(), 654);
         paymentDtoInto.setCancelReason(paymentDto.getCancelReason());
         // 토스페이먼츠 결제 취소 API : START
-        PaymentResponse paymentResponse = paymentService.paymentCancel(paymentDtoInto);
+        //PaymentResponse paymentResponse = paymentService.paymentCancel(paymentDtoInto);
         OrderDto orderDto = OrderDto.builder()
                 .status(OrderStatus.ORDER_CANCEL.getStatus())
                 .orderId(orderId).build();

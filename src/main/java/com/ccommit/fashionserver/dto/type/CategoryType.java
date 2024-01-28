@@ -1,4 +1,4 @@
-package com.ccommit.fashionserver.dto;
+package com.ccommit.fashionserver.dto.type;
 
 /**
  * packageName    : com.ccommit.fashionserver.dto

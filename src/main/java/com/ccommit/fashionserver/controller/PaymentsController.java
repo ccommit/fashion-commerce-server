@@ -1,10 +1,9 @@
 package com.ccommit.fashionserver.controller;
 
 import com.ccommit.fashionserver.aop.CommonResponse;
-import com.ccommit.fashionserver.aop.LoginCheck;
-import com.ccommit.fashionserver.dto.*;
-import com.ccommit.fashionserver.exception.ErrorCode;
-import com.ccommit.fashionserver.exception.FashionServerException;
+import com.ccommit.fashionserver.dto.PaymentResponse;
+import com.ccommit.fashionserver.dto.TossPaymentRequest;
+import com.ccommit.fashionserver.dto.TossPaymentResponse;
 import com.ccommit.fashionserver.service.PaymentService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,30 +33,31 @@ public class PaymentsController {
         this.paymentService = paymentService;
     }
 
-    //TODO: 결제 요청
+    //결제 요청
     @GetMapping("")
     public ResponseEntity<CommonResponse<TossPaymentResponse>> createPayment(@RequestBody TossPaymentRequest tossPaymentRequest) {
-        TossPaymentResponse result = paymentService.createPayment(tossPaymentRequest);
+        paymentService.createPayment(tossPaymentRequest);
 
-        CommonResponse<TossPaymentResponse> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "결제 요청 성공하였습니다.", result);
+        CommonResponse<TossPaymentResponse> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "결제 요청 성공하였습니다.", null);
         return ResponseEntity.ok(response);
     }
 
-    //TODO: 결제 성공
     @GetMapping("/toss/success")
-    public ResponseEntity<CommonResponse<TossPaymentResponse>> tossPaymentSuccess(@RequestParam String status, @RequestParam String orderNo,
-                                                                                  @RequestParam String payMethod, @RequestParam String bankCode) {
+    public ResponseEntity<CommonResponse<TossPaymentResponse>> tossPaymentSuccess(@RequestParam(name = "status") String status,
+                                                                                  @RequestParam(name = "orderNo") String orderNo,
+                                                                                  @RequestParam(name = "payMethod") String payMethod,
+                                                                                  @RequestParam(name = "bankCode") String bankCode) {
         PaymentResponse result = new PaymentResponse();
-        paymentService.approvePayment(orderNo);
-        CommonResponse<TossPaymentResponse> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "결제에 성공하였습니다.", null);
+        TossPaymentResponse tossPaymentResponse = paymentService.approvePayment(orderNo);
+        CommonResponse<TossPaymentResponse> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "결제에 성공하였습니다.", tossPaymentResponse);
         return ResponseEntity.ok(response);
     }
 
-    //TODO: 결제 요청 실패
     @GetMapping("/toss/fail")
     public ResponseEntity<CommonResponse<TossPaymentResponse>> tossPaymentFail(@RequestParam String status, @RequestParam String orderNo,
                                                                                @RequestParam String payMethod, @RequestParam String bankCode) {
 
+        paymentService.tossPaymentFail(orderNo);
         CommonResponse<TossPaymentResponse> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "결제 실패하였습니다.", null);
         return ResponseEntity.ok(response);
     }

@@ -1,6 +1,7 @@
 package com.ccommit.fashionserver.service;
 
 import com.ccommit.fashionserver.dto.*;
+import com.ccommit.fashionserver.dto.status.OrderStatus;
 import com.ccommit.fashionserver.exception.ErrorCode;
 import com.ccommit.fashionserver.exception.FashionServerException;
 import com.ccommit.fashionserver.mapper.OrderMapper;
@@ -19,6 +20,7 @@ import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -69,7 +71,8 @@ public class OrderService {
         return isProductQuantity;
     }
 
-    public OrderDto insertOrder(int userId, RequestProductDto orderProductList) throws JsonProcessingException {
+    @Transactional
+    public TossPaymentResponse insertOrder(int userId, RequestProductDto orderProductList) throws JsonProcessingException {
         OrderDto orderDto = new OrderDto();
         ObjectMapper objectMapper = new ObjectMapper();
         ArrayList<ProductInfoDto> productInfoDtoList = new ArrayList<>();
@@ -78,18 +81,19 @@ public class OrderService {
         String orderId = RandomStringUtils.randomAlphanumeric(LENGTH); // 주문번호 생성
 
         for (int i = 0; i < orderProductList.getProductDtoList().size(); i++) {
-
             ProductDto productDto = productService.getDetailProduct(orderProductList.getProductDtoList().get(i).getId());
             int productQuantity = productDto.getSaleQuantity();
             int orderQuantity = orderProductList.getProductDtoList().get(i).getSaleQuantity();
 
-            if (productQuantityCheck(productQuantity, orderQuantity)) {
+            if (productQuantityCheck(productQuantity, orderQuantity)) { //수량 유효성검사
                 int resultQuantity = productQuantity - orderQuantity;
                 log.debug("상품수량 - 주문수량 = 차감결과수량 : " + productQuantity + " - " + orderQuantity + " = " + resultQuantity);
 
-                int updateResult = orderMapper.updateSaleQuantity(resultQuantity, orderProductList.getProductDtoList().get(i).getId());
+                int updateResult = 0;
+                /* 쿼리는 잠시 주석처리해두었습니다. 사용하는 UPDATE입니다.
+                updateResult = orderMapper.updateSaleQuantity(resultQuantity, orderProductList.getProductDtoList().get(i).getId());
                 if (updateResult == 0)
-                    throw new FashionServerException(ErrorCode.valueOf("PRODUCT_UPDATE_ERROR").getMessage(), 611);
+                    throw new FashionServerException(ErrorCode.valueOf("PRODUCT_UPDATE_ERROR").getMessage(), 611);*/
             }
 
             int orderPrice = orderQuantity * productDto.getPrice(); // 주문금액 = 주문수량 * 상품금액
@@ -118,23 +122,26 @@ public class OrderService {
 
         if (orderMapper.isExistOrderId(orderDto.getOrderId()) != 0)
             throw new FashionServerException(ErrorCode.valueOf("ORDER_ID_DUPLICATION_ERROR").getMessage(), 631);
-        if (orderMapper.insertOrder(orderDto) == 0)
-            throw new FashionServerException(ErrorCode.valueOf("ORDER_INSERT_ERROR").getMessage(), 630);
 
         TossPaymentRequest tossPaymentRequest = TossPaymentRequest.builder()
                 .orderNo(orderId)
                 .amount(orderTotalPrice)
                 .productDesc(orderName.toString())
                 .build();
-        paymentService.createPayment(tossPaymentRequest);
-        // 토스 카드 결제 시 디비에서 조회
-/*        int paymentId = paymentMapper.getPaymentInfo(orderDto.getOrderId()).getId();
-        orderDto.setPaymentId(paymentId); // 결제번호 셋팅
+        // 토스페이먼츠 결제 승인 요청 후 프론트 URL을 리턴받기위함.
+        TossPaymentResponse tossPaymentResponse = paymentService.createPayment(tossPaymentRequest);
 
-        if (orderMapper.updateOrderPaymentId(orderDto) == 0) // 결제테이블 결제번호를 주문테이블에 추가(UPDATE)
-            throw new FashionServerException(ErrorCode.valueOf("ORDER_UPDATE_ERROR").getMessage(), 636);*/
+        /** 1. insertOrder() 를 실행해서 createPayment()를 실행해서 결제 승인 요청 로직을 실행합니다.
+         2. insertOrder()의 리턴은 프론트 URL로 구매자 인증 절차를 진행합니다.
+         3. 성공하면 tossPaymentSuccess() 메서드를 실행합니다.
+         4. 결제 승인을 하고 payment 테이블에 상태값을 변경해줍니다.
+         5. 상품 재고 update와 주문정보 insert 를 해야하는데 1번~4번까지의 로직을 검토 부탁드립니다. */
+        /*if (orderMapper.insertOrder(orderDto) == 0)
+            throw new FashionServerException(ErrorCode.valueOf("ORDER_INSERT_ERROR").getMessage(), 630);
 
-        return orderMapper.getUserOrder(orderDto.getOrderId(), orderDto.getUserId());
+        orderMapper.getUserOrder(orderDto.getOrderId(), orderDto.getUserId())
+        */
+        return tossPaymentResponse;
     }
 
     public List<OrderDto> getUserOrderList(int userId) throws ParseException {
@@ -197,7 +204,8 @@ public class OrderService {
         List<ProductDto> productDtoList = getCartList(userId);
         RequestProductDto requestProductDto = new RequestProductDto();
         requestProductDto.setProductDtoList(productDtoList);
-        OrderDto orderDto = insertOrder(userId, requestProductDto);
+        OrderDto orderDto = null;
+        insertOrder(userId, requestProductDto);
         return orderDto;
     }
 

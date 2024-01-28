@@ -32,7 +32,7 @@ import lombok.*;
 @AllArgsConstructor
 public class PaymentDto {
     private int id;
-    private int status;
+    private String status;
     private String orderId;
     private String cardNumber;
     private String paymentKey;

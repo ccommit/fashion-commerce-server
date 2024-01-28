@@ -1,5 +1,6 @@
 package com.ccommit.fashionserver.dto;
 
+import com.ccommit.fashionserver.dto.type.UserType;
 import com.ccommit.fashionserver.service.PhoneNumCheck;
 import lombok.Getter;
 import lombok.Setter;

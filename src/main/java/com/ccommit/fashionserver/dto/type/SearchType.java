@@ -1,24 +1,25 @@
-package com.ccommit.fashionserver.dto;
+package com.ccommit.fashionserver.dto.type;
 
 /**
  * packageName    : com.ccommit.fashionserver.dto
- * fileName       : UserType
+ * fileName       : SearchType
  * author         : juoiy
- * date           : 2023-08-23
+ * date           : 2023-09-05
  * description    :
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2023-08-23        juoiy       최초 생성
+ * 2023-09-05        juoiy       최초 생성
  */
-public enum UserType {
-    USER("USER"),
-    SELLER("SELLER"),
-    ADMIN("ADMIN");
+public enum SearchType {
+    NEW("NEW"),
+    LOW_PRICE("LOW_PRICE"),
+    HIGH_PRICE("HIGH_PRICE"),
+    LIKE("LIKE");
 
     private final String name;
 
-    UserType(String name) {
+    SearchType(String name) {
         this.name = name;
     }
 

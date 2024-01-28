@@ -3,7 +3,7 @@ package com.ccommit.fashionserver.controller;
 import com.ccommit.fashionserver.aop.CommonResponse;
 import com.ccommit.fashionserver.aop.LoginCheck;
 import com.ccommit.fashionserver.dto.ProductDto;
-import com.ccommit.fashionserver.dto.SearchType;
+import com.ccommit.fashionserver.dto.type.SearchType;
 import com.ccommit.fashionserver.service.ProductService;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;

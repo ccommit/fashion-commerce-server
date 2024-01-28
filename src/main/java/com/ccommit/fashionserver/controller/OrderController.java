@@ -2,10 +2,7 @@ package com.ccommit.fashionserver.controller;
 
 import com.ccommit.fashionserver.aop.CommonResponse;
 import com.ccommit.fashionserver.aop.LoginCheck;
-import com.ccommit.fashionserver.dto.OrderDto;
-import com.ccommit.fashionserver.dto.PaymentDto;
-import com.ccommit.fashionserver.dto.ProductDto;
-import com.ccommit.fashionserver.dto.RequestProductDto;
+import com.ccommit.fashionserver.dto.*;
 import com.ccommit.fashionserver.exception.ErrorCode;
 import com.ccommit.fashionserver.exception.FashionServerException;
 import com.ccommit.fashionserver.service.OrderService;
@@ -13,6 +10,7 @@ import com.ccommit.fashionserver.service.ProductService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.log4j.Log4j2;
 import org.json.simple.parser.ParseException;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
@@ -42,18 +40,23 @@ public class OrderController {
     private final ProductService productService;
     private StringRedisTemplate redisTemplate;
 
+    private static final String EXCAHGE_NAME = "sample.exchange";
+
+    @Autowired
+    RabbitTemplate rabbitTemplate;
+
     public OrderController(OrderService orderService, ProductService productService) {
         this.orderService = orderService;
         this.productService = productService;
     }
 
-    @LoginCheck(types = LoginCheck.UserType.USER)
     @PostMapping("")
-    public ResponseEntity<CommonResponse<OrderDto>> insertOrder(Integer userId, @RequestBody RequestProductDto orderProductList) throws JsonProcessingException {
+    @LoginCheck(types = LoginCheck.UserType.USER)
+    public ResponseEntity<CommonResponse<String>> insertOrder(Integer userId, @RequestBody RequestProductDto orderProductList) throws JsonProcessingException {
         if (orderProductList.getProductDtoList().size() == 0 || orderProductList.getProductDtoList() == null)
             throw new FashionServerException(ErrorCode.valueOf("PRODUCT_NOT_USING_ERROR").getMessage(), 613);
-        OrderDto orderDto = orderService.insertOrder(userId, orderProductList);
-        CommonResponse<OrderDto> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "상품 주문에 성공하였습니다.", orderDto);
+        TossPaymentResponse orderDto = orderService.insertOrder(userId, orderProductList);
+        CommonResponse<String> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "상품 주문에 성공하였습니다.", orderDto.getCheckoutPage());
         return ResponseEntity.ok(response);
     }
 

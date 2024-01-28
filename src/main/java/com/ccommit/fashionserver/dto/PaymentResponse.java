@@ -20,10 +20,16 @@ import org.json.simple.JSONObject;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PaymentResponse {
+    private Long amount;
     private String paymentKey;      //결제 키값
     private String orderId;         //주문번호
     private String orderName;       //주문 상품 이름
     private String customerName;    //구매자 명
     private JSONObject card;        //카드정보
+    private JSONObject checkout;
+    private String totalAmount;
+
+    private String successUrl;
+    private String failUrl;
 
 }

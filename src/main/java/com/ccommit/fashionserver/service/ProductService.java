@@ -1,8 +1,8 @@
 package com.ccommit.fashionserver.service;
 
-import com.ccommit.fashionserver.dto.CategoryType;
 import com.ccommit.fashionserver.dto.ProductDto;
-import com.ccommit.fashionserver.dto.SearchType;
+import com.ccommit.fashionserver.dto.type.CategoryType;
+import com.ccommit.fashionserver.dto.type.SearchType;
 import com.ccommit.fashionserver.exception.ErrorCode;
 import com.ccommit.fashionserver.exception.FashionServerException;
 import com.ccommit.fashionserver.mapper.ProductMapper;

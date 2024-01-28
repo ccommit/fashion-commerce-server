@@ -48,7 +48,7 @@ public enum ErrorCode {
     CARD_PAYMENT_SELECT_ERROR(653, "결제 정보 조회에 실패하였습니다. 다시 시도해주세요."),
     PAYMENT_NOT_USING_ERROR(654, "결제 정보가 존재하지 않습니다."),
 
-    HTTP_SERVER_ERROR(660, "토스페이먼츠에 요청 중 문제가 발생하였습니다."),
+    TOSS_HTTP_SERVER_ERROR(660, "토스페이먼츠에 요청 중 문제가 발생하였습니다."),
 
     INPUT_NULL_ERROR(999, "필수 입력값이 없습니다. 확인해주세요.");
 

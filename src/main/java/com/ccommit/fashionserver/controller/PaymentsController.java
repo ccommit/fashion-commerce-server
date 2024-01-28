@@ -1,12 +1,9 @@
 package com.ccommit.fashionserver.controller;
 
 import com.ccommit.fashionserver.aop.CommonResponse;
-import com.ccommit.fashionserver.aop.LoginCheck;
-import com.ccommit.fashionserver.dto.PaymentDto;
-import com.ccommit.fashionserver.dto.PaymentRequest;
 import com.ccommit.fashionserver.dto.PaymentResponse;
-import com.ccommit.fashionserver.exception.ErrorCode;
-import com.ccommit.fashionserver.exception.FashionServerException;
+import com.ccommit.fashionserver.dto.TossPaymentRequest;
+import com.ccommit.fashionserver.dto.TossPaymentResponse;
 import com.ccommit.fashionserver.service.PaymentService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,29 +33,50 @@ public class PaymentsController {
         this.paymentService = paymentService;
     }
 
-    @PostMapping("/card-payment")
-    @LoginCheck(types = LoginCheck.UserType.USER)
-    public ResponseEntity<CommonResponse<PaymentResponse>> insertCardPayment(Integer loginSession, @RequestBody PaymentRequest paymentRequest) {
-        PaymentResponse result = paymentService.insertCardPayment(paymentRequest);
-        CommonResponse<PaymentResponse> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "카드결제가 성공하였습니다.", result);
+    //결제 요청
+    @GetMapping("")
+    public ResponseEntity<CommonResponse<TossPaymentResponse>> createPayment(@RequestBody TossPaymentRequest tossPaymentRequest) {
+        paymentService.createPayment(tossPaymentRequest);
+
+        CommonResponse<TossPaymentResponse> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "결제 요청 성공하였습니다.", null);
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{orderId}")
-    @LoginCheck(types = LoginCheck.UserType.USER)
-    public ResponseEntity<CommonResponse<PaymentResponse>> getPaymentHistory(Integer loginSession, @PathVariable("orderId") String orderId) {
-        PaymentResponse result = paymentService.getPaymentHistory(orderId);
-        CommonResponse<PaymentResponse> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "카드결제 조회에 성공하였습니다.", result);
+    @GetMapping("/toss/success")
+    public ResponseEntity<CommonResponse<TossPaymentResponse>> tossPaymentSuccess(@RequestParam(name = "status") String status,
+                                                                                  @RequestParam(name = "orderNo") String orderNo,
+                                                                                  @RequestParam(name = "payMethod") String payMethod,
+                                                                                  @RequestParam(name = "bankCode") String bankCode) {
+        PaymentResponse result = new PaymentResponse();
+        TossPaymentResponse tossPaymentResponse = paymentService.approvePayment(orderNo);
+        CommonResponse<TossPaymentResponse> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "결제에 성공하였습니다.", tossPaymentResponse);
         return ResponseEntity.ok(response);
     }
 
-    @PatchMapping("/cancel")
-    @LoginCheck(types = LoginCheck.UserType.USER)
-    public ResponseEntity<CommonResponse<PaymentResponse>> paymentCancel(Integer loginSession, @RequestBody PaymentDto paymentDto) {
-        if (paymentDto.getPaymentKey() == null || paymentDto.getCancelReason() == null)
-            throw new FashionServerException(ErrorCode.valueOf("INPUT_NULL_ERROR").getMessage(), 999);
-        paymentService.paymentCancel(paymentDto);
-        CommonResponse<PaymentResponse> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "결제 취소가 되었습니다.", null);
+    @GetMapping("/toss/fail")
+    public ResponseEntity<CommonResponse<TossPaymentResponse>> tossPaymentFail(@RequestParam String status, @RequestParam String orderNo,
+                                                                               @RequestParam String payMethod, @RequestParam String bankCode) {
+
+        paymentService.tossPaymentFail(orderNo);
+        CommonResponse<TossPaymentResponse> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "결제 실패하였습니다.", null);
+        return ResponseEntity.ok(response);
+    }
+
+    //TODO: 환불하기
+    @PostMapping("/refunds/{orderNo}")
+    public ResponseEntity<CommonResponse<TossPaymentResponse>> refundsPayment(@RequestBody TossPaymentRequest tossPaymentRequest) {
+        TossPaymentResponse result = paymentService.refundsPayment(tossPaymentRequest);
+
+        CommonResponse<TossPaymentResponse> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "결제 요청 성공하였습니다.", result);
+        return ResponseEntity.ok(response);
+    }
+
+    //TODO: 결제 조회하기
+    @GetMapping("/select")
+    public ResponseEntity<CommonResponse<TossPaymentResponse>> selectPayment(@RequestBody TossPaymentRequest tossPaymentRequest) {
+        TossPaymentResponse result = paymentService.refundsPayment(tossPaymentRequest);
+
+        CommonResponse<TossPaymentResponse> response = new CommonResponse<>(HttpStatus.OK, "SUCCESS", "결제 요청 성공하였습니다.", result);
         return ResponseEntity.ok(response);
     }
 

@@ -9,7 +9,20 @@
         VALUES (#{status}, now(), #{orderId}, #{cardNumber}, #{paymentKey})
     </insert>
 
-    <update id="updatePaymentCancel" parameterType="com.ccommit.fashionserver.dto.PaymentDto">
+    <update id="updatePaymentInfo" parameterType="com.ccommit.fashionserver.dto.PaymentDto">
+        UPDATE payments
+        SET
+        <if test="status != null and !status.equals('') ">
+        status = #{status},
+        </if>
+        <if test="cancelReason != null and !cancelReason.equals('') ">
+        cancel_reason = #{cancelReason},
+        </if>
+        update_date = now()
+        WHERE payment_key = #{paymentKey}
+    </update>
+
+    <update id="updatePaymentStatus" parameterType="com.ccommit.fashionserver.dto.PaymentDto">
         UPDATE payments
         SET
         status = #{status},

@@ -1,7 +1,7 @@
 package com.ccommit.fashionserver.service;
 
 import com.ccommit.fashionserver.dto.UserDto;
-import com.ccommit.fashionserver.dto.UserType;
+import com.ccommit.fashionserver.dto.type.UserType;
 import com.ccommit.fashionserver.exception.ErrorCode;
 import com.ccommit.fashionserver.exception.FashionServerException;
 import com.ccommit.fashionserver.mapper.UserMapper;

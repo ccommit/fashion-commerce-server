@@ -19,7 +19,7 @@ public interface PaymentMapper {
 
     int insertPaymentInfo(PaymentDto paymentDto);
 
-    int updatePaymentCancel(PaymentDto paymentDto);
+    int updatePaymentInfo(PaymentDto paymentDto);
 
     PaymentDto getPaymentInfo(String orderId);
 }

@@ -1,6 +1,7 @@
 package com.ccommit.fashionserver.service;
 
 import com.ccommit.fashionserver.dto.*;
+import com.ccommit.fashionserver.dto.status.OrderStatus;
 import com.ccommit.fashionserver.exception.ErrorCode;
 import com.ccommit.fashionserver.exception.FashionServerException;
 import com.ccommit.fashionserver.mapper.OrderMapper;
@@ -19,6 +20,7 @@ import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,29 +61,46 @@ public class OrderService {
         this.redisTemplate = redisTemplate;
     }
 
-    public OrderDto insertOrder(int userId, RequestProductDto orderProductList) throws JsonProcessingException {
+    // 상품 재고 체크 유효성 검사
+    public Boolean productQuantityCheck(int productQuantity, int orderQuantity) {
+        Boolean isProductQuantity = false;
+        if (productQuantity < 1 || productQuantity < orderQuantity)
+            throw new FashionServerException(ErrorCode.valueOf("PRODUCT_QUANTITY_NOT_ENOUGH_ERROR").getMessage(), 614);
+        else
+            isProductQuantity = true;
+        return isProductQuantity;
+    }
+
+    @Transactional
+    public TossPaymentResponse insertOrder(int userId, RequestProductDto orderProductList) throws JsonProcessingException {
         OrderDto orderDto = new OrderDto();
         ObjectMapper objectMapper = new ObjectMapper();
-        int orderTotalPrice = 0;
         ArrayList<ProductInfoDto> productInfoDtoList = new ArrayList<>();
+        int orderTotalPrice = 0;
+        final int LENGTH = 20; // 주문번호 길이 제한
+        String orderId = RandomStringUtils.randomAlphanumeric(LENGTH); // 주문번호 생성
+
         for (int i = 0; i < orderProductList.getProductDtoList().size(); i++) {
             ProductDto productDto = productService.getDetailProduct(orderProductList.getProductDtoList().get(i).getId());
             int productQuantity = productDto.getSaleQuantity();
             int orderQuantity = orderProductList.getProductDtoList().get(i).getSaleQuantity();
-            if (productQuantity < 1 || productQuantity < orderQuantity)
-                throw new FashionServerException(ErrorCode.valueOf("PRODUCT_QUANTITY_NOT_ENOUGH_ERROR").getMessage(), 614);
 
-            int resultQuantity = productQuantity - orderQuantity;
-            log.debug("상품수량 - 주문수량 = 차감결과수량 : " + productQuantity + " - " + orderQuantity + " = " + resultQuantity);
+            if (productQuantityCheck(productQuantity, orderQuantity)) { //수량 유효성검사
+                int resultQuantity = productQuantity - orderQuantity;
+                log.debug("상품수량 - 주문수량 = 차감결과수량 : " + productQuantity + " - " + orderQuantity + " = " + resultQuantity);
 
-            int updateResult = orderMapper.updateSaleQuantity(resultQuantity, orderProductList.getProductDtoList().get(i).getId());
-            if (updateResult == 0)
-                throw new FashionServerException(ErrorCode.valueOf("PRODUCT_UPDATE_ERROR").getMessage(), 611);
+                int updateResult = 0;
+                /* 쿼리는 잠시 주석처리해두었습니다. 사용하는 UPDATE입니다.
+                updateResult = orderMapper.updateSaleQuantity(resultQuantity, orderProductList.getProductDtoList().get(i).getId());
+                if (updateResult == 0)
+                    throw new FashionServerException(ErrorCode.valueOf("PRODUCT_UPDATE_ERROR").getMessage(), 611);*/
+            }
 
-            int orderPrice = orderQuantity * (productDto.getPrice());
+            int orderPrice = orderQuantity * productDto.getPrice(); // 주문금액 = 주문수량 * 상품금액
             orderTotalPrice += orderPrice;
             log.debug("productId: " + productDto.getId() + ", orderQuantity: " + orderQuantity + ",price: " + productDto.getPrice()
                     + ", orderPrice: " + orderPrice + ", orderTotalPrice: " + orderTotalPrice);
+
             ProductInfoDto productInfoDto = ProductInfoDto.builder()
                     .id(productDto.getId())
                     .saleQuantity(orderQuantity)
@@ -89,38 +108,40 @@ public class OrderService {
                     .price(productDto.getPrice())
                     .build();
             productInfoDtoList.add(productInfoDto);
+        }//for end
 
-        }
-        String orderName = productInfoDtoList.get(0).getName() + " 외 " + (orderProductList.getProductDtoList().size() - 1) + "개";
+        StringBuilder orderName = new StringBuilder();
+        orderName.append(productInfoDtoList.get(0).getName() + " 외 ");
+        orderName.append((orderProductList.getProductDtoList().size() - 1) + "개");
         orderDto.setTotalPrice(orderTotalPrice);
         orderDto.setStatus(OrderStatus.ORDER_COMPLETION.getStatus());
         String json = objectMapper.writeValueAsString(productInfoDtoList);
         orderDto.setProductInfo(json);
         orderDto.setUserId(userId);
-        final int LENGTH = 20; // 주문번호 길이 제한
-        String orderId = RandomStringUtils.randomAlphanumeric(LENGTH);
         orderDto.setOrderId(orderId);
-        int isExistOrderId = orderMapper.isExistOrderId(orderDto.getOrderId());
-        if (isExistOrderId != 0)
+
+        if (orderMapper.isExistOrderId(orderDto.getOrderId()) != 0)
             throw new FashionServerException(ErrorCode.valueOf("ORDER_ID_DUPLICATION_ERROR").getMessage(), 631);
-        int insertResult = orderMapper.insertOrder(orderDto);
-        if (insertResult == 0)
+
+        TossPaymentRequest tossPaymentRequest = TossPaymentRequest.builder()
+                .orderNo(orderId)
+                .amount(orderTotalPrice)
+                .productDesc(orderName.toString())
+                .build();
+        // 토스페이먼츠 결제 승인 요청 후 프론트 URL을 리턴받기위함.
+        TossPaymentResponse tossPaymentResponse = paymentService.createPayment(tossPaymentRequest);
+
+        /** 1. insertOrder() 를 실행해서 createPayment()를 실행해서 결제 승인 요청 로직을 실행합니다.
+         2. insertOrder()의 리턴은 프론트 URL로 구매자 인증 절차를 진행합니다.
+         3. 성공하면 tossPaymentSuccess() 메서드를 실행합니다.
+         4. 결제 승인을 하고 payment 테이블에 상태값을 변경해줍니다.
+         5. 상품 재고 update와 주문정보 insert 를 해야하는데 1번~4번까지의 로직을 검토 부탁드립니다. */
+        /*if (orderMapper.insertOrder(orderDto) == 0)
             throw new FashionServerException(ErrorCode.valueOf("ORDER_INSERT_ERROR").getMessage(), 630);
-        // 카드결제 API START
-        PaymentRequest paymentRequest = new PaymentRequest();
-        paymentRequest.setAmount(orderDto.getTotalPrice());
-        paymentRequest.setCardExpirationMonth("06");
-        paymentRequest.setCardExpirationYear("25");
-        paymentRequest.setCardNumber("5388032333580235");
-        paymentRequest.setCustomerIdentityNumber("950609");
-        paymentRequest.setOrderId(orderDto.getOrderId());
-        paymentRequest.setOrderName(orderName);
-        paymentService.insertCardPayment(paymentRequest);
-        int paymentId = paymentMapper.getPaymentInfo(orderDto.getOrderId()).getId();
-        orderDto.setPaymentId(paymentId);
-        if (orderMapper.updateOrderPaymentId(orderDto) == 0)
-            throw new FashionServerException(ErrorCode.valueOf("ORDER_UPDATE_ERROR").getMessage(), 636);
-        return orderMapper.getUserOrder(orderDto.getOrderId(), orderDto.getUserId());
+
+        orderMapper.getUserOrder(orderDto.getOrderId(), orderDto.getUserId())
+        */
+        return tossPaymentResponse;
     }
 
     public List<OrderDto> getUserOrderList(int userId) throws ParseException {
@@ -183,7 +204,8 @@ public class OrderService {
         List<ProductDto> productDtoList = getCartList(userId);
         RequestProductDto requestProductDto = new RequestProductDto();
         requestProductDto.setProductDtoList(productDtoList);
-        OrderDto orderDto = insertOrder(userId, requestProductDto);
+        OrderDto orderDto = null;
+        insertOrder(userId, requestProductDto);
         return orderDto;
     }
 
@@ -202,15 +224,17 @@ public class OrderService {
             throw new FashionServerException(ErrorCode.valueOf("PAYMENT_NOT_USING_ERROR").getMessage(), 654);
         paymentDtoInto.setCancelReason(paymentDto.getCancelReason());
         // 토스페이먼츠 결제 취소 API : START
-        PaymentResponse paymentResponse = paymentService.paymentCancel(paymentDtoInto);
-        OrderDto orderDto = new OrderDto();
-        orderDto.setStatus(OrderStatus.ORDER_CANCEL.getStatus());
-        orderDto.setOrderId(orderId);
+        //PaymentResponse paymentResponse = paymentService.paymentCancel(paymentDtoInto);
+        OrderDto orderDto = OrderDto.builder()
+                .status(OrderStatus.ORDER_CANCEL.getStatus())
+                .orderId(orderId).build();
+        /*orderDto.setStatus(OrderStatus.ORDER_CANCEL.getStatus());
+        orderDto.setOrderId(orderId);*/
         int updateResult = orderMapper.updateOrderCancel(orderDto);
         if (updateResult == 0)
             throw new FashionServerException(ErrorCode.valueOf("ORDER_CANCEL_UPDATE_ERROR").getMessage(), 635);
         // TODO: 취소 시 상품재고 복원
+
         return orderMapper.getUserOrder(orderDto.getOrderId(), orderDto.getUserId());
     }
-
 }
